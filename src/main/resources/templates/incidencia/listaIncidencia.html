@@ -3,43 +3,103 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Incidencias</title>
+    <title>TestTrack QA — Incidencias</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/incidencia/listaIncidencia.css}">
 </head>
 <body>
-<main>
-    <h1>Incidencias</h1>
-    <p th:if="${error}" th:text="${error}" role="alert"></p>
-    <p><a th:href="@{/incidencias/nuevo}">Registrar incidencia</a></p>
+<header class="topbar">
+    <div class="brand"><span class="brand-mark" aria-hidden="true"></span>TestTrack</div>
+    <a class="nav-link" th:href="@{/incidencias}" aria-current="page">Incidencias</a>
+    <a class="primary-button" th:href="@{/incidencias/nuevo}">+ Nueva incidencia</a>
+</header>
+
+<main class="content">
+    <section class="page-head" aria-labelledby="page-title">
+        <h1 id="page-title">Incidencias</h1>
+        <div class="stat-row" aria-label="Resumen de incidencias">
+            <div class="stat">Total<b id="total-count">0</b></div>
+            <div class="stat stat-critical">Críticas<b id="critical-count">0</b></div>
+            <div class="stat stat-high">Altas<b id="high-count">0</b></div>
+            <div class="stat">Cerradas<b id="closed-count">0</b></div>
+        </div>
+    </section>
+
+    <p class="alert" th:if="${error}" th:text="${error}" role="alert"></p>
 
     <section aria-label="Listado de incidencias">
-        <p th:if="${#lists.isEmpty(incidencias)}">No hay incidencias registradas.</p>
-        <table th:unless="${#lists.isEmpty(incidencias)}">
-            <thead>
-            <tr>
-                <th scope="col">ID</th>
-                <th scope="col">Código</th>
-                <th scope="col">Título</th>
-                <th scope="col">Módulo</th>
-                <th scope="col">Severidad</th>
-                <th scope="col">Estado</th>
-                <th scope="col">Acciones</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr th:each="incidencia : ${incidencias}">
-                <td th:text="${incidencia.idIncidencia}"></td>
-                <td th:text="${incidencia.codigoIncidencia}"></td>
-                <td th:text="${incidencia.titulo}"></td>
-                <td th:text="${incidencia.modulo}"></td>
-                <td th:text="${incidencia.severidad}"></td>
-                <td th:text="${incidencia.estado}"></td>
-                <td>
-                    <a th:href="@{/incidencias/editar/{id}(id=${incidencia.idIncidencia})}">Editar</a>
-                </td>
-            </tr>
-            </tbody>
-        </table>
+        <div class="toolbar">
+            <div class="filters" role="group" aria-label="Filtrar por estado">
+                <button class="chip active" type="button" data-filter="all" aria-pressed="true">Todas</button>
+                <button class="chip" type="button" data-filter="ABIERTO" aria-pressed="false">Abiertas</button>
+                <button class="chip" type="button" data-filter="CERRADO" aria-pressed="false">Cerradas</button>
+            </div>
+            <label>
+                <span class="visually-hidden">Buscar por código o título</span>
+                <input class="search" id="search" type="search" placeholder="Buscar por código o título">
+            </label>
+        </div>
+
+        <div class="table-wrap">
+            <table>
+                <thead>
+                <tr>
+                    <th scope="col">Código</th>
+                    <th scope="col">Incidencia</th>
+                    <th scope="col">Severidad</th>
+                    <th scope="col">Estado</th>
+                    <th scope="col">Fecha</th>
+                    <th scope="col">Acciones</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="incidencia : ${incidencias}"
+                    th:attr="data-severity=${incidencia.severidad},data-status=${incidencia.estado},data-code=${incidencia.codigoIncidencia},data-title=${incidencia.titulo}">
+                    <td><span class="code" th:text="${incidencia.codigoIncidencia}">BUG-024</span></td>
+                    <td>
+                        <div class="title" th:text="${incidencia.titulo}">Título de la incidencia</div>
+                        <div class="module" th:text="${incidencia.modulo}">Módulo</div>
+                    </td>
+                    <td>
+                        <span class="severity"
+                              th:classappend="${incidencia.severidad == 'CRITICA' ? ' severity-critica' : (incidencia.severidad == 'ALTA' ? ' severity-alta' : (incidencia.severidad == 'MEDIA' ? ' severity-media' : ' severity-baja'))}"
+                              th:text="${incidencia.severidad}">MEDIA</span>
+                    </td>
+                    <td>
+                        <span class="status"
+                              th:classappend="${incidencia.estado.name() == 'ABIERTO' ? ' status-abierto' : ' status-cerrado'}"
+                              th:text="${incidencia.estado.name()}">ABIERTO</span>
+                    </td>
+                    <td class="date">
+                        <time th:attr="datetime=${incidencia.fechaCreacion},data-date=${incidencia.fechaCreacion}"
+                              th:text="${incidencia.fechaCreacion != null ? incidencia.fechaCreacion : '—'}">08 Oct 2026</time>
+                    </td>
+                    <td>
+                        <div class="actions">
+                            <a class="action-link" th:href="@{/incidencias/editar/{id}(id=${incidencia.idIncidencia})}">Editar</a>
+                            <form th:action="@{/incidencias/{id}/estado(id=${incidencia.idIncidencia})}" method="post">
+                                <input type="hidden" name="estado"
+                                       th:value="${incidencia.estado.name() == 'ABIERTO' ? 'CERRADO' : 'ABIERTO'}">
+                                <button class="action-button" type="submit"
+                                        th:text="${incidencia.estado.name() == 'ABIERTO' ? 'Cerrar' : 'Reabrir'}">Cerrar</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                <tr id="empty-state" th:if="${#lists.isEmpty(incidencias)}">
+                    <td class="empty-state" colspan="6">No hay incidencias registradas. Crea una para comenzar.</td>
+                </tr>
+                <tr id="no-results" hidden>
+                    <td class="empty-state" colspan="6">No se encontraron incidencias con esos filtros.</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
     </section>
 </main>
+
+<script th:src="@{/incidencia/listaIncidencia.js}" defer></script>
 </body>
 </html>
