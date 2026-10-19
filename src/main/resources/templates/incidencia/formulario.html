@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="es" >
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="${titulo}">Incidencia</title>
+</head>
+<body>
+<main>
+    <h1 th:text="${titulo}">Incidencia</h1>
+    <form th:action="${incidencia.idIncidencia == null} ? @{/incidencias/crear} : @{/incidencias/editar/{id}(id=${incidencia.idIncidencia})}"
+          th:object="${incidencia}" method="post">
+        <p th:if="${incidencia.idIncidencia != null}">
+            <label for="codigoIncidencia">Código generado</label>
+            <input id="codigoIncidencia" type="text" th:field="*{codigoIncidencia}" readonly>
+        </p>
+        <p th:if="${#fields.hasGlobalErrors()}" th:each="error : ${#fields.globalErrors()}"
+           th:text="${error}" role="alert"></p>
+
+        <label for="titulo">Título</label>
+        <input id="titulo" type="text" maxlength="120" th:field="*{titulo}">
+        <small th:if="${#fields.hasErrors('titulo')}" th:errors="*{titulo}" role="alert"></small>
+
+        <label for="modulo">Módulo</label>
+        <input id="modulo" type="text" maxlength="80" th:field="*{modulo}">
+        <small th:if="${#fields.hasErrors('modulo')}" th:errors="*{modulo}" role="alert"></small>
+
+        <label for="entornoVersion">Entorno / versión</label>
+        <input id="entornoVersion" type="text" maxlength="60" th:field="*{entornoVersion}">
+        <small th:if="${#fields.hasErrors('entornoVersion')}" th:errors="*{entornoVersion}" role="alert"></small>
+
+        <label for="descripcion">Descripción</label>
+        <textarea id="descripcion" maxlength="1000" th:field="*{descripcion}"></textarea>
+        <small th:if="${#fields.hasErrors('descripcion')}" th:errors="*{descripcion}" role="alert"></small>
+
+        <label for="pasos">Pasos para reproducir (opcional)</label>
+        <textarea id="pasos" maxlength="1000" th:field="*{pasos}"></textarea>
+        <small th:if="${#fields.hasErrors('pasos')}" th:errors="*{pasos}" role="alert"></small>
+
+        <label for="resultadoEsperado">Resultado esperado (opcional)</label>
+        <textarea id="resultadoEsperado" maxlength="500" th:field="*{resultadoEsperado}"></textarea>
+        <small th:if="${#fields.hasErrors('resultadoEsperado')}" th:errors="*{resultadoEsperado}" role="alert"></small>
+
+        <label for="resultadoActual">Resultado actual (opcional)</label>
+        <textarea id="resultadoActual" maxlength="500" th:field="*{resultadoActual}"></textarea>
+        <small th:if="${#fields.hasErrors('resultadoActual')}" th:errors="*{resultadoActual}" role="alert"></small>
+
+        <label for="severidad">Severidad</label>
+        <select id="severidad" th:field="*{severidad}">
+            <option value="">Selecciona una severidad</option>
+            <option value="BAJA">BAJA</option>
+            <option value="MEDIA">MEDIA</option>
+            <option value="ALTA">ALTA</option>
+            <option value="CRITICA">CRITICA</option>
+        </select>
+        <small th:if="${#fields.hasErrors('severidad')}" th:errors="*{severidad}" role="alert"></small>
+
+        <label for="comentario">Comentario</label>
+        <textarea id="comentario" maxlength="500" th:field="*{comentario}"></textarea>
+        <small th:if="${#fields.hasErrors('comentario')}" th:errors="*{comentario}" role="alert"></small>
+
+        <label for="evidencia">Evidencia (URL o ruta)</label>
+        <input id="evidencia" type="text" maxlength="500" th:field="*{evidencia}">
+        <small th:if="${#fields.hasErrors('evidencia')}" th:errors="*{evidencia}" role="alert"></small>
+
+        <button type="submit">Guardar</button>
+        <a th:href="@{/incidencias}">Cancelar</a>
+    </form>
+</main>
+</body>
+</html>

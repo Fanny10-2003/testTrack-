@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Incidencias</title>
+</head>
+<body>
+<main>
+    <h1>Incidencias</h1>
+    <p th:if="${error}" th:text="${error}" role="alert"></p>
+    <p><a th:href="@{/incidencias/nuevo}">Registrar incidencia</a></p>
+
+    <section aria-label="Listado de incidencias">
+        <p th:if="${#lists.isEmpty(incidencias)}">No hay incidencias registradas.</p>
+        <table th:unless="${#lists.isEmpty(incidencias)}">
+            <thead>
+            <tr>
+                <th scope="col">ID</th>
+                <th scope="col">Código</th>
+                <th scope="col">Título</th>
+                <th scope="col">Módulo</th>
+                <th scope="col">Severidad</th>
+                <th scope="col">Estado</th>
+                <th scope="col">Acciones</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="incidencia : ${incidencias}">
+                <td th:text="${incidencia.idIncidencia}"></td>
+                <td th:text="${incidencia.codigoIncidencia}"></td>
+                <td th:text="${incidencia.titulo}"></td>
+                <td th:text="${incidencia.modulo}"></td>
+                <td th:text="${incidencia.severidad}"></td>
+                <td th:text="${incidencia.estado}"></td>
+                <td>
+                    <a th:href="@{/incidencias/editar/{id}(id=${incidencia.idIncidencia})}">Editar</a>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </section>
+</main>
+</body>
+</html>
