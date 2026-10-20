@@ -3,6 +3,7 @@ package com.TestTrackQA.testTrack.DTO;
 import com.TestTrackQA.testTrack.model.Incidencia;
 import com.TestTrackQA.testTrack.model.EstadoIncidencia;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
@@ -54,6 +55,15 @@ public class IncidenciaDTO {
 
     private EstadoIncidencia estado;
 
+    @NotNull(message = "Selecciona un proyecto")
+    private Long proyectoId;
+
+    @NotNull(message = "Selecciona el usuario que reporta")
+    private Long usuarioId;
+
+    private String proyectoNombre;
+    private String usuarioNombre;
+
     public Incidencia toEntity() {
         Incidencia incidencia = new Incidencia();
         incidencia.setIdIncidencia(idIncidencia);
@@ -85,6 +95,14 @@ public class IncidenciaDTO {
         dto.setSeveridad(incidencia.getSeveridad());
         dto.setComentario(incidencia.getComentario());
         dto.setEvidencia(incidencia.getEvidencia());
+        if (incidencia.getProyecto() != null) {
+            dto.setProyectoId(incidencia.getProyecto().getIdProyecto());
+            dto.setProyectoNombre(incidencia.getProyecto().getNombre());
+        }
+        if (incidencia.getUsuario() != null) {
+            dto.setUsuarioId(incidencia.getUsuario().getIdUsuario());
+            dto.setUsuarioNombre(incidencia.getUsuario().getNombre());
+        }
         return dto;
     }
 }

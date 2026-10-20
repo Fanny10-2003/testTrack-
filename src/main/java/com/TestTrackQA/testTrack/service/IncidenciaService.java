@@ -2,7 +2,11 @@ package com.TestTrackQA.testTrack.service;
 
 import com.TestTrackQA.testTrack.model.Incidencia;
 import com.TestTrackQA.testTrack.model.EstadoIncidencia;
+import com.TestTrackQA.testTrack.model.Proyecto;
+import com.TestTrackQA.testTrack.model.Usuario;
 import com.TestTrackQA.testTrack.repository.IIncidenciaRepository;
+import com.TestTrackQA.testTrack.repository.IProyectoRepository;
+import com.TestTrackQA.testTrack.repository.IUsuarioRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -17,16 +21,19 @@ import java.util.List;
 public class IncidenciaService implements  IIncidenciaService {
 
     private final IIncidenciaRepository prodRepo;
+    private final IProyectoRepository proyectoRepo;
+    private final IUsuarioRepository usuarioRepo;
 
 
     @Override
     public List<Incidencia> traerIncidencias() {
-        return prodRepo.findAll();
+        return prodRepo.findAllWithProyectoAndUsuario();
     }
 
     @Override
     @Transactional
-    public Incidencia crearIncidencia(Incidencia incidencia) {
+    public Incidencia crearIncidencia(Incidencia incidencia, Long proyectoId, Long usuarioId) {
+        asignarProyectoYUsuario(incidencia, proyectoId, usuarioId);
         validarIncidencia(incidencia);
         incidencia.setIdIncidencia(null);
         incidencia.setFechaCreacion(LocalDateTime.now());
@@ -41,15 +48,18 @@ public class IncidenciaService implements  IIncidenciaService {
 
     @Override
     public Incidencia buscarIncidencia(Long codIncidencia) {
-        return prodRepo.findById(codIncidencia)
+        return prodRepo.findWithProyectoAndUsuarioById(codIncidencia)
                 .orElseThrow(() -> new EntityNotFoundException(
                         "No se encontró la incidencia con ID " + codIncidencia));
     }
 
     @Override
-    public Incidencia editarIncidencia(Long codIncidencia, Incidencia incidencia) {
-        validarIncidencia(incidencia);
+    @Transactional
+    public Incidencia editarIncidencia(Long codIncidencia, Incidencia incidencia,
+                                       Long proyectoId, Long usuarioId) {
         Incidencia incidenciaExistente = buscarIncidencia(codIncidencia);
+        asignarProyectoYUsuario(incidencia, proyectoId, usuarioId);
+        validarIncidencia(incidencia);
         incidenciaExistente.setTitulo(incidencia.getTitulo());
         incidenciaExistente.setModulo(incidencia.getModulo());
         incidenciaExistente.setEntornoVersion(incidencia.getEntornoVersion());
@@ -60,6 +70,8 @@ public class IncidenciaService implements  IIncidenciaService {
         incidenciaExistente.setSeveridad(incidencia.getSeveridad());
         incidenciaExistente.setComentario(incidencia.getComentario());
         incidenciaExistente.setEvidencia(incidencia.getEvidencia());
+        incidenciaExistente.setProyecto(incidencia.getProyecto());
+        incidenciaExistente.setUsuario(incidencia.getUsuario());
         incidenciaExistente.setFechaModificacion(LocalDateTime.now());
 
         return prodRepo.save(incidenciaExistente);
@@ -102,5 +114,17 @@ public class IncidenciaService implements  IIncidenciaService {
                 || !incidencia.getSeveridad().matches("BAJA|MEDIA|ALTA|CRITICA")) {
             throw new IllegalArgumentException("La severidad debe ser BAJA, MEDIA, ALTA o CRITICA");
         }
+        if (incidencia.getProyecto() == null || incidencia.getUsuario() == null) {
+            throw new IllegalArgumentException("El proyecto y el usuario que reporta son obligatorios");
+        }
+    }
+
+    private void asignarProyectoYUsuario(Incidencia incidencia, Long proyectoId, Long usuarioId) {
+        Proyecto proyecto = proyectoRepo.findById(proyectoId)
+                .orElseThrow(() -> new IllegalArgumentException("El proyecto seleccionado no existe"));
+        Usuario usuario = usuarioRepo.findById(usuarioId)
+                .orElseThrow(() -> new IllegalArgumentException("El usuario seleccionado no existe"));
+        incidencia.setProyecto(proyecto);
+        incidencia.setUsuario(usuario);
     }
 }

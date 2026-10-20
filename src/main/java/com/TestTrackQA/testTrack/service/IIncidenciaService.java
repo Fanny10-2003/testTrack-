@@ -8,8 +8,8 @@ import java.util.List;
 public interface IIncidenciaService {
 
     List<Incidencia> traerIncidencias();
-    Incidencia crearIncidencia(Incidencia incidencia);
+    Incidencia crearIncidencia(Incidencia incidencia, Long proyectoId, Long usuarioId);
     Incidencia buscarIncidencia (Long codIncidencia);
-    Incidencia editarIncidencia (Long codIncidencia, Incidencia incidencia);
+    Incidencia editarIncidencia (Long codIncidencia, Incidencia incidencia, Long proyectoId, Long usuarioId);
     Incidencia cambiarEstado(Long codIncidencia, EstadoIncidencia nuevoEstado);
 }

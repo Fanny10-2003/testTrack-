@@ -4,7 +4,9 @@ package com.TestTrackQA.testTrack.model;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 import java.time.LocalDateTime;
 import jakarta.persistence.Column;
 
@@ -40,6 +42,18 @@ private String evidencia;
 private EstadoIncidencia estado = EstadoIncidencia.ABIERTO;
 private LocalDateTime fechaCreacion;
 private LocalDateTime fechaModificacion;
+
+@ManyToOne(fetch = FetchType.LAZY, optional = false)
+@JoinColumn(name = "id_proyecto", nullable = false)
+@ToString.Exclude
+@EqualsAndHashCode.Exclude
+private Proyecto proyecto;
+
+@ManyToOne(fetch = FetchType.LAZY, optional = false)
+@JoinColumn(name = "id_usuario", nullable = false)
+@ToString.Exclude
+@EqualsAndHashCode.Exclude
+private Usuario usuario;
 
 @PostLoad
 private void establecerEstadoPorDefectoParaRegistrosExistentes() {
