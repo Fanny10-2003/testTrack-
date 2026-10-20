@@ -26,7 +26,16 @@ public class Proyecto {
     private LocalDateTime fecha_creacion;
     private LocalDateTime fecha_modificacion;
 
-    @OneToMany(mappedBy = "proyecto")
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "id_administrador", nullable = false)
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    private Usuario administrador;
+
+    @Column(nullable = false)
+    private boolean eliminado = false;
+
+    @OneToMany(mappedBy = "proyecto", fetch = FetchType.LAZY)
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
     private List<Incidencia> incidencias = new ArrayList<>();

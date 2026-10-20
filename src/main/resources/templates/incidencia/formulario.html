@@ -12,7 +12,7 @@
 <body>
 <header class="topbar">
     <a class="brand" th:href="@{/incidencias}">
-        <span class="brand-mark" aria-hidden="true"></span>TestTrack
+        <img class="brand-logo" th:src="@{/images/logo/Logo.png}" alt="TestTrack">
     </a>
     <nav aria-label="Navegación principal">
         <a class="nav-link" th:href="@{/incidencias}" aria-current="page">Incidencias</a>
@@ -60,6 +60,12 @@
                        placeholder="Ej. Producción — v2.4">
                 <small class="field-error" th:if="${#fields.hasErrors('entornoVersion')}" th:errors="*{entornoVersion}" role="alert"></small>
             </div>
+        </div>
+
+        <div class="active-project">
+            <span class="active-project-label">Proyecto activo</span>
+            <strong th:text="${proyectoActivo.nombre}">Proyecto actual</strong>
+            <span>La incidencia se asociará a este proyecto y al usuario conectado.</span>
         </div>
 
         <div class="field">

@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Crear cuenta — TestTrack QA</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/auth/auth.css}">
+</head>
+<body>
+<main class="auth-shell">
+    <a class="brand" th:href="@{/login}">
+        <img class="brand-logo" th:src="@{/images/logo/Logo.png}" alt="TestTrack">
+    </a>
+
+    <section class="auth-card" aria-labelledby="page-title">
+        <header class="auth-heading">
+            <p class="eyebrow">Empieza a probar mejor</p>
+            <h1 id="page-title">Crear cuenta</h1>
+            <p>Regístrate para organizar y dar seguimiento a tus incidencias.</p>
+        </header>
+
+        <form th:action="@{/registro}" th:object="${registro}" method="post">
+            <div class="field">
+                <label for="nombre">Nombre</label>
+                <input id="nombre" type="text" th:field="*{nombre}" autocomplete="name"
+                       maxlength="120" placeholder="Tu nombre" required>
+                <small class="field-error" th:if="${#fields.hasErrors('nombre')}"
+                       th:errors="*{nombre}" role="alert"></small>
+            </div>
+            <div class="field">
+                <label for="correo">Correo electrónico</label>
+                <input id="correo" type="email" th:field="*{correo}" autocomplete="email"
+                       maxlength="254" placeholder="nombre@ejemplo.com" required>
+                <small class="field-error" th:if="${#fields.hasErrors('correo')}"
+                       th:errors="*{correo}" role="alert"></small>
+            </div>
+            <div class="field">
+                <label for="contrasena">Contraseña</label>
+                <input id="contrasena" type="password" th:field="*{contrasena}"
+                       autocomplete="new-password" minlength="8" maxlength="72"
+                       placeholder="Al menos 8 caracteres" required>
+                <small class="field-error" th:if="${#fields.hasErrors('contrasena')}"
+                       th:errors="*{contrasena}" role="alert"></small>
+            </div>
+            <div class="field">
+                <label for="confirmarContrasena">Confirmar contraseña</label>
+                <input id="confirmarContrasena" type="password" th:field="*{confirmarContrasena}"
+                       autocomplete="new-password" required>
+                <small class="field-error" th:if="${#fields.hasErrors('confirmarContrasena')}"
+                       th:errors="*{confirmarContrasena}" role="alert"></small>
+            </div>
+            <button class="btn-primary" type="submit">Crear cuenta</button>
+        </form>
+
+        <p class="auth-footer">¿Ya tienes cuenta? <a th:href="@{/login}">Iniciar sesión</a></p>
+    </section>
+</main>
+</body>
+</html>

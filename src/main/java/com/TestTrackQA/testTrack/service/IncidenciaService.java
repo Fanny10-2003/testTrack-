@@ -1,7 +1,7 @@
 package com.TestTrackQA.testTrack.service;
 
-import com.TestTrackQA.testTrack.model.Incidencia;
 import com.TestTrackQA.testTrack.model.EstadoIncidencia;
+import com.TestTrackQA.testTrack.model.Incidencia;
 import com.TestTrackQA.testTrack.model.Proyecto;
 import com.TestTrackQA.testTrack.model.Usuario;
 import com.TestTrackQA.testTrack.repository.IIncidenciaRepository;
@@ -15,19 +15,24 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 
-
 @Service
 @RequiredArgsConstructor
-public class IncidenciaService implements  IIncidenciaService {
+public class IncidenciaService implements IIncidenciaService {
 
-    private final IIncidenciaRepository prodRepo;
-    private final IProyectoRepository proyectoRepo;
-    private final IUsuarioRepository usuarioRepo;
-
+    private final IIncidenciaRepository incidenciaRepository;
+    private final IProyectoRepository proyectoRepository;
+    private final IUsuarioRepository usuarioRepository;
 
     @Override
+    @Transactional(readOnly = true)
     public List<Incidencia> traerIncidencias() {
-        return prodRepo.findAllWithProyectoAndUsuario();
+        return incidenciaRepository.findAllWithProyectoAndUsuario();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Incidencia> traerIncidenciasPorProyecto(Long proyectoId) {
+        return incidenciaRepository.findAllByProyecto_IdProyecto(proyectoId);
     }
 
     @Override
@@ -41,63 +46,95 @@ public class IncidenciaService implements  IIncidenciaService {
         incidencia.setEstado(EstadoIncidencia.ABIERTO);
         incidencia.setCodigoIncidencia(null);
 
-        Incidencia guardada = prodRepo.save(incidencia);
+        Incidencia guardada = incidenciaRepository.save(incidencia);
         guardada.setCodigoIncidencia(String.format("BUG-%03d", guardada.getIdIncidencia()));
-        return prodRepo.save(guardada);
+        return incidenciaRepository.save(guardada);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Incidencia buscarIncidencia(Long codIncidencia) {
-        return prodRepo.findWithProyectoAndUsuarioById(codIncidencia)
+        return incidenciaRepository.findWithProyectoAndUsuarioById(codIncidencia)
                 .orElseThrow(() -> new EntityNotFoundException(
                         "No se encontró la incidencia con ID " + codIncidencia));
     }
 
     @Override
-    @Transactional
-    public Incidencia editarIncidencia(Long codIncidencia, Incidencia incidencia,
-                                       Long proyectoId, Long usuarioId) {
-        Incidencia incidenciaExistente = buscarIncidencia(codIncidencia);
-        asignarProyectoYUsuario(incidencia, proyectoId, usuarioId);
-        validarIncidencia(incidencia);
-        incidenciaExistente.setTitulo(incidencia.getTitulo());
-        incidenciaExistente.setModulo(incidencia.getModulo());
-        incidenciaExistente.setEntornoVersion(incidencia.getEntornoVersion());
-        incidenciaExistente.setDescripcion(incidencia.getDescripcion());
-        incidenciaExistente.setPasos(incidencia.getPasos());
-        incidenciaExistente.setResultadoEsperado(incidencia.getResultadoEsperado());
-        incidenciaExistente.setResultadoActual(incidencia.getResultadoActual());
-        incidenciaExistente.setSeveridad(incidencia.getSeveridad());
-        incidenciaExistente.setComentario(incidencia.getComentario());
-        incidenciaExistente.setEvidencia(incidencia.getEvidencia());
-        incidenciaExistente.setProyecto(incidencia.getProyecto());
-        incidenciaExistente.setUsuario(incidencia.getUsuario());
-        incidenciaExistente.setFechaModificacion(LocalDateTime.now());
-
-        return prodRepo.save(incidenciaExistente);
+    @Transactional(readOnly = true)
+    public Incidencia buscarIncidenciaEnProyecto(Long codIncidencia, Long proyectoId) {
+        return incidenciaRepository.findByIdIncidenciaAndProyecto_IdProyecto(codIncidencia, proyectoId)
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "No se encontró la incidencia en el proyecto activo"));
     }
 
     @Override
+    @Transactional
+    public Incidencia editarIncidencia(Long codIncidencia, Incidencia cambios,
+                                       Long proyectoId, Long usuarioId) {
+        Incidencia existente = buscarIncidencia(codIncidencia);
+        asignarProyectoYUsuario(cambios, proyectoId, usuarioId);
+        validarIncidencia(cambios);
+        copiarDatosEditables(cambios, existente);
+        existente.setProyecto(cambios.getProyecto());
+        existente.setUsuario(cambios.getUsuario());
+        existente.setFechaModificacion(LocalDateTime.now());
+        return incidenciaRepository.save(existente);
+    }
+
+    @Override
+    @Transactional
+    public Incidencia editarIncidenciaEnProyecto(Long codIncidencia, Incidencia cambios, Long proyectoId) {
+        Incidencia existente = buscarIncidenciaEnProyecto(codIncidencia, proyectoId);
+        cambios.setProyecto(existente.getProyecto());
+        cambios.setUsuario(existente.getUsuario());
+        validarIncidencia(cambios);
+        copiarDatosEditables(cambios, existente);
+        existente.setFechaModificacion(LocalDateTime.now());
+        return incidenciaRepository.save(existente);
+    }
+
+    @Override
+    @Transactional
     public Incidencia cambiarEstado(Long codIncidencia, EstadoIncidencia nuevoEstado) {
         Incidencia incidencia = buscarIncidencia(codIncidencia);
-        EstadoIncidencia estadoActual = incidencia.getEstado();
-
-        if (estadoActual == nuevoEstado) {
-            return incidencia;
-        }
-
-        boolean transicionPermitida =
-                (estadoActual == EstadoIncidencia.ABIERTO && nuevoEstado == EstadoIncidencia.CERRADO)
-                || (estadoActual == EstadoIncidencia.CERRADO && nuevoEstado == EstadoIncidencia.ABIERTO);
-
-        if (!transicionPermitida) {
-            throw new IllegalStateException(
-                    "No se permite cambiar el estado de " + estadoActual + " a " + nuevoEstado);
-        }
-
+        validarTransicion(incidencia, nuevoEstado);
         incidencia.setEstado(nuevoEstado);
         incidencia.setFechaModificacion(LocalDateTime.now());
-        return prodRepo.save(incidencia);
+        return incidenciaRepository.save(incidencia);
+    }
+
+    @Override
+    @Transactional
+    public Incidencia cambiarEstadoEnProyecto(Long codIncidencia, Long proyectoId,
+                                               EstadoIncidencia nuevoEstado) {
+        Incidencia incidencia = buscarIncidenciaEnProyecto(codIncidencia, proyectoId);
+        validarTransicion(incidencia, nuevoEstado);
+        incidencia.setEstado(nuevoEstado);
+        incidencia.setFechaModificacion(LocalDateTime.now());
+        return incidenciaRepository.save(incidencia);
+    }
+
+    private void copiarDatosEditables(Incidencia origen, Incidencia destino) {
+        destino.setTitulo(origen.getTitulo());
+        destino.setModulo(origen.getModulo());
+        destino.setEntornoVersion(origen.getEntornoVersion());
+        destino.setDescripcion(origen.getDescripcion());
+        destino.setPasos(origen.getPasos());
+        destino.setResultadoEsperado(origen.getResultadoEsperado());
+        destino.setResultadoActual(origen.getResultadoActual());
+        destino.setSeveridad(origen.getSeveridad());
+        destino.setComentario(origen.getComentario());
+        destino.setEvidencia(origen.getEvidencia());
+    }
+
+    private void validarTransicion(Incidencia incidencia, EstadoIncidencia nuevoEstado) {
+        EstadoIncidencia actual = incidencia.getEstado();
+        boolean permitida =
+                (actual == EstadoIncidencia.ABIERTO && nuevoEstado == EstadoIncidencia.CERRADO)
+                || (actual == EstadoIncidencia.CERRADO && nuevoEstado == EstadoIncidencia.ABIERTO);
+        if (actual != nuevoEstado && !permitida) {
+            throw new IllegalStateException("No se permite cambiar el estado de " + actual + " a " + nuevoEstado);
+        }
     }
 
     private void validarIncidencia(Incidencia incidencia) {
@@ -120,9 +157,9 @@ public class IncidenciaService implements  IIncidenciaService {
     }
 
     private void asignarProyectoYUsuario(Incidencia incidencia, Long proyectoId, Long usuarioId) {
-        Proyecto proyecto = proyectoRepo.findById(proyectoId)
+        Proyecto proyecto = proyectoRepository.findById(proyectoId)
                 .orElseThrow(() -> new IllegalArgumentException("El proyecto seleccionado no existe"));
-        Usuario usuario = usuarioRepo.findById(usuarioId)
+        Usuario usuario = usuarioRepository.findById(usuarioId)
                 .orElseThrow(() -> new IllegalArgumentException("El usuario seleccionado no existe"));
         incidencia.setProyecto(proyecto);
         incidencia.setUsuario(usuario);

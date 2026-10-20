@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="${titulo + ' — TestTrack QA'}">Proyecto — TestTrack QA</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/proyecto/proyecto.css}">
+</head>
+<body>
+<header class="topbar">
+    <a class="brand" th:href="@{/proyectos}"><img class="brand-logo" th:src="@{/images/logo/Logo.png}" alt="TestTrack"></a>
+    <nav aria-label="Navegación principal">
+        <a class="nav-link" th:href="@{/proyectos}" aria-current="page">Proyectos</a>
+        <a class="nav-link" th:href="@{/incidencias}">Incidencias</a>
+    </nav>
+    <form th:action="@{/logout}" method="post">
+        <button class="logout-button" type="submit">Cerrar sesión</button>
+    </form>
+</header>
+
+<main class="form-page">
+    <section class="page-head">
+        <p class="eyebrow">Organiza tu trabajo</p>
+        <h1 th:text="${titulo}">Nuevo proyecto</h1>
+        <p class="subtitle">Los proyectos que crees quedarán asociados a tu cuenta como administrador.</p>
+    </section>
+
+    <form class="project-form" th:object="${proyecto}"
+          th:action="${proyecto.idProyecto == null} ? @{/proyectos} : @{/proyectos/{id}(id=${proyecto.idProyecto})}"
+          method="post">
+        <div class="field">
+            <label for="nombre">Nombre del proyecto</label>
+            <input id="nombre" type="text" th:field="*{nombre}" maxlength="120"
+                   placeholder="Ej. Cortex CRM" required autofocus>
+            <small class="field-error" th:if="${#fields.hasErrors('nombre')}"
+                   th:errors="*{nombre}" role="alert"></small>
+        </div>
+        <div class="field">
+            <label for="descripcion">Descripción <span class="optional">(opcional)</span></label>
+            <textarea id="descripcion" th:field="*{descripcion}" maxlength="1000"
+                      placeholder="Describe brevemente el objetivo del proyecto"></textarea>
+            <small class="field-error" th:if="${#fields.hasErrors('descripcion')}"
+                   th:errors="*{descripcion}" role="alert"></small>
+        </div>
+        <div class="field">
+            <label for="urlBase">URL base <span class="optional">(opcional)</span></label>
+            <input id="urlBase" type="url" th:field="*{urlBase}" maxlength="500"
+                   placeholder="https://ejemplo.com">
+            <small class="field-error" th:if="${#fields.hasErrors('urlBase')}"
+                   th:errors="*{urlBase}" role="alert"></small>
+        </div>
+        <div class="form-actions">
+            <a class="btn-ghost" th:href="@{/proyectos}">Cancelar</a>
+            <button class="btn-primary" type="submit"
+                    th:text="${proyecto.idProyecto == null ? 'Crear proyecto' : 'Guardar cambios'}">Crear proyecto</button>
+        </div>
+    </form>
+</main>
+</body>
+</html>

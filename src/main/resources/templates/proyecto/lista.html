@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>TestTrack QA — Mis proyectos</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/proyecto/proyecto.css}">
+</head>
+<body>
+<header class="topbar">
+    <a class="brand" th:href="@{/proyectos}">
+        <img class="brand-logo" th:src="@{/images/logo/Logo.png}" alt="TestTrack">
+    </a>
+    <nav aria-label="Navegación principal">
+        <a class="nav-link" th:href="@{/proyectos}" aria-current="page">Proyectos</a>
+        <a class="nav-link" th:href="@{/incidencias}">Incidencias</a>
+        <span class="nav-link" aria-disabled="true">Invitaciones</span>
+        <a class="nav-link" th:href="@{/perfil}">Mi perfil</a>
+    </nav>
+    <a class="profile" th:href="@{/perfil}" th:text="${iniciales}"
+       th:attr="aria-label=${'Ver perfil de ' + usuarioNombre}" title="Ver perfil">TT</a>
+</header>
+
+<main class="dashboard">
+    <section class="dashboard-head">
+        <div>
+            <h1 th:text="${'Hola, ' + usuarioNombre}">Hola</h1>
+            <p>Tienes <span th:text="${proyectos.size()}">0</span> proyectos activos</p>
+        </div>
+        <a class="btn-primary" th:href="@{/proyectos/nuevo}">+ Nuevo proyecto</a>
+    </section>
+
+    <p class="notice notice-error" th:if="${error}" th:text="${error}" role="alert"></p>
+    <p class="notice notice-success" th:if="${mensaje}" th:text="${mensaje}" role="status"></p>
+
+    <section class="summary-row" aria-label="Resumen de incidencias">
+        <article class="summary-card">
+            <div class="label">Incidencias totales</div>
+            <div class="value" th:text="${totalIncidencias}">0</div>
+        </article>
+        <article class="summary-card c-critica">
+            <div class="label">Críticas abiertas</div>
+            <div class="value" th:text="${criticasAbiertas}">0</div>
+        </article>
+        <article class="summary-card c-alta">
+            <div class="label">Abiertas</div>
+            <div class="value" th:text="${incidenciasAbiertas}">0</div>
+        </article>
+        <article class="summary-card c-baja">
+            <div class="label">Cerradas</div>
+            <div class="value" th:text="${incidenciasCerradas}">0</div>
+        </article>
+    </section>
+
+    <section class="project-grid" aria-label="Mis proyectos">
+        <article class="dashboard-project" th:each="proyecto, iter : ${proyectos}">
+            <div class="dashboard-project-top">
+                <span class="dashboard-project-icon"
+                      th:classappend="${' tone-' + (iter.index % 3)}"
+                      th:text="${#strings.isEmpty(proyecto.nombre) ? '?' : #strings.substring(proyecto.nombre, 0, 1)}">P</span>
+                <span class="role-tag">Administrador</span>
+            </div>
+            <div class="dashboard-project-info">
+                <h2 th:text="${proyecto.nombre}">Nombre del proyecto</h2>
+                <p th:text="${proyecto.descripcion != null and !proyecto.descripcion.isBlank() ? proyecto.descripcion : 'Sin descripción'}">
+                    Descripción del proyecto
+                </p>
+            </div>
+            <div class="dashboard-project-stats">
+                <div class="project-stat">Incidencias<b th:text="${proyecto.totalIncidencias}">0</b></div>
+                <div class="project-stat critical">Críticas<b th:text="${proyecto.criticasAbiertas}">0</b></div>
+                <div class="project-stat">Abiertas<b th:text="${proyecto.incidenciasAbiertas}">0</b></div>
+            </div>
+            <div class="dashboard-project-actions">
+                <form th:action="@{/proyectos/{id}/seleccionar(id=${proyecto.idProyecto})}" method="post">
+                    <button class="text-link" type="submit"
+                            th:text="${proyectoActivoId == proyecto.idProyecto ? 'Proyecto activo' : 'Abrir proyecto'}">
+                        Abrir proyecto
+                    </button>
+                </form>
+                <a class="text-link" th:href="@{/proyectos/{id}/editar(id=${proyecto.idProyecto})}">Editar</a>
+                <form th:action="@{/proyectos/{id}/eliminar(id=${proyecto.idProyecto})}" method="post"
+                      onsubmit="return confirm('¿Eliminar este proyecto? Se ocultará de tus proyectos.');">
+                    <button class="danger-link" type="submit">Eliminar</button>
+                </form>
+            </div>
+        </article>
+
+        <a class="new-project-card" th:href="@{/proyectos/nuevo}">
+            <span class="new-project-plus" aria-hidden="true">+</span>
+            <span>Crear otro proyecto</span>
+        </a>
+    </section>
+</main>
+</body>
+</html>

@@ -20,4 +20,13 @@ public interface IIncidenciaRepository extends JpaRepository<Incidencia, Long> {
     @EntityGraph(attributePaths = {"proyecto", "usuario"})
     @Query("select i from Incidencia i where i.idIncidencia = :id")
     Optional<Incidencia> findWithProyectoAndUsuarioById(@Param("id") Long id);
+
+    @EntityGraph(attributePaths = {"proyecto", "usuario"})
+    List<Incidencia> findAllByProyecto_IdProyecto(Long proyectoId);
+
+    @EntityGraph(attributePaths = {"proyecto"})
+    List<Incidencia> findAllByProyecto_IdProyectoIn(List<Long> proyectoIds);
+
+    @EntityGraph(attributePaths = {"proyecto", "usuario"})
+    Optional<Incidencia> findByIdIncidenciaAndProyecto_IdProyecto(Long incidenciaId, Long proyectoId);
 }

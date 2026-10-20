@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -11,14 +11,22 @@
 </head>
 <body>
 <header class="topbar">
-    <div class="brand"><span class="brand-mark" aria-hidden="true"></span>TestTrack</div>
+    <div class="brand"><img class="brand-logo" th:src="@{/images/logo/Logo.png}" alt="TestTrack"></div>
+    <a class="nav-link" th:href="@{/proyectos}">Proyectos</a>
     <a class="nav-link" th:href="@{/incidencias}" aria-current="page">Incidencias</a>
+    <span class="active-project-nav" th:if="${proyectoActivo != null}"
+          th:text="${proyectoActivo.nombre}">Proyecto activo</span>
+    <form th:action="@{/logout}" method="post">
+        <button class="action-button" type="submit">Cerrar sesión</button>
+    </form>
     <a class="primary-button" th:href="@{/incidencias/nuevo}">+ Nueva incidencia</a>
 </header>
 
 <main class="content">
     <section class="page-head" aria-labelledby="page-title">
         <h1 id="page-title">Incidencias</h1>
+        <p class="active-project-title" th:if="${proyectoActivo != null}"
+           th:text="${'Proyecto: ' + proyectoActivo.nombre}">Proyecto activo</p>
         <div class="stat-row" aria-label="Resumen de incidencias">
             <div class="stat">Total<b id="total-count">0</b></div>
             <div class="stat stat-critical">Críticas<b id="critical-count">0</b></div>
@@ -61,6 +69,10 @@
                     <td>
                         <div class="title" th:text="${incidencia.titulo}">Título de la incidencia</div>
                         <div class="module" th:text="${incidencia.modulo}">Módulo</div>
+                        <div class="module" th:if="${incidencia.proyecto != null}"
+                             th:text="${'Proyecto: ' + incidencia.proyecto.nombre}">Proyecto</div>
+                        <div class="module" th:if="${incidencia.usuario != null}"
+                             th:text="${'Reportado por: ' + incidencia.usuario.nombre}">Reportado por</div>
                     </td>
                     <td>
                         <span class="severity"

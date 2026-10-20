@@ -3,7 +3,6 @@ package com.TestTrackQA.testTrack.DTO;
 import com.TestTrackQA.testTrack.model.Incidencia;
 import com.TestTrackQA.testTrack.model.EstadoIncidencia;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
@@ -55,10 +54,8 @@ public class IncidenciaDTO {
 
     private EstadoIncidencia estado;
 
-    @NotNull(message = "Selecciona un proyecto")
     private Long proyectoId;
 
-    @NotNull(message = "Selecciona el usuario que reporta")
     private Long usuarioId;
 
     private String proyectoNombre;

@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping ("/api/incidencias")
@@ -30,33 +31,44 @@ public class IncidenciaRestController {
 
 
     @GetMapping
-    public List<Incidencia> traerIncidencias() {
-        return prodServ.traerIncidencias();
+    public List<IncidenciaDTO> traerIncidencias() {
+        return prodServ.traerIncidencias().stream()
+                .map(IncidenciaDTO::fromEntity)
+                .collect(Collectors.toList());
     }
 
     @GetMapping("/{codIncidencia}")
-    public ResponseEntity<Incidencia> buscarIncidencia(@PathVariable Long codIncidencia) {
+    public ResponseEntity<IncidenciaDTO> buscarIncidencia(@PathVariable Long codIncidencia) {
         try {
-            return ResponseEntity.ok(prodServ.buscarIncidencia(codIncidencia));
+            return ResponseEntity.ok(IncidenciaDTO.fromEntity(prodServ.buscarIncidencia(codIncidencia)));
         } catch (EntityNotFoundException ex) {
             return ResponseEntity.notFound().build();
         }
     }
 
     @PostMapping
-    public ResponseEntity<Incidencia> crearIncidencia(@Valid @RequestBody IncidenciaDTO incidencia) {
-        Incidencia incidenciaCreada = prodServ.crearIncidencia(incidencia.toEntity());
-        return ResponseEntity.status(HttpStatus.CREATED).body(incidenciaCreada);
+    public ResponseEntity<?> crearIncidencia(@Valid @RequestBody IncidenciaDTO incidencia) {
+        try {
+            Incidencia incidenciaCreada = prodServ.crearIncidencia(incidencia.toEntity(),
+                    incidencia.getProyectoId(), incidencia.getUsuarioId());
+            return ResponseEntity.status(HttpStatus.CREATED).body(IncidenciaDTO.fromEntity(incidenciaCreada));
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.badRequest().body(ex.getMessage());
+        }
     }
 
     @PutMapping("/{codIncidencia}")
-    public ResponseEntity<Incidencia> editarIncidencia(
+    public ResponseEntity<?> editarIncidencia(
             @PathVariable Long codIncidencia,
             @Valid @RequestBody IncidenciaDTO incidencia) {
         try {
-            return ResponseEntity.ok(prodServ.editarIncidencia(codIncidencia, incidencia.toEntity()));
+            Incidencia actualizada = prodServ.editarIncidencia(codIncidencia, incidencia.toEntity(),
+                    incidencia.getProyectoId(), incidencia.getUsuarioId());
+            return ResponseEntity.ok(IncidenciaDTO.fromEntity(actualizada));
         } catch (EntityNotFoundException ex) {
             return ResponseEntity.notFound().build();
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.badRequest().body(ex.getMessage());
         }
     }
 
