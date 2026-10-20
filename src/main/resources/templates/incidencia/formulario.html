@@ -1,70 +1,140 @@
 <!DOCTYPE html>
-<html lang="es" >
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title th:text="${titulo}">Incidencia</title>
+    <title th:text="${titulo + ' — TestTrack QA'}">Nueva incidencia — TestTrack QA</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/incidencia/formulario.css}">
 </head>
 <body>
-<main>
-    <h1 th:text="${titulo}">Incidencia</h1>
-    <form th:action="${incidencia.idIncidencia == null} ? @{/incidencias/crear} : @{/incidencias/editar/{id}(id=${incidencia.idIncidencia})}"
+<header class="topbar">
+    <a class="brand" th:href="@{/incidencias}">
+        <span class="brand-mark" aria-hidden="true"></span>TestTrack
+    </a>
+    <nav aria-label="Navegación principal">
+        <a class="nav-link" th:href="@{/incidencias}" aria-current="page">Incidencias</a>
+    </nav>
+</header>
+
+<main class="page">
+    <section class="page-head" aria-labelledby="page-title">
+        <h1 id="page-title" th:text="${titulo}">Nueva incidencia</h1>
+        <p th:if="${incidencia.idIncidencia == null}">Se le asignará un código BUG- automáticamente al guardar.</p>
+        <p th:if="${incidencia.idIncidencia != null}">Actualiza la información de esta incidencia.</p>
+    </section>
+
+    <form class="form-card"
+          th:action="${incidencia.idIncidencia == null} ? @{/incidencias/crear} : @{/incidencias/editar/{id}(id=${incidencia.idIncidencia})}"
           th:object="${incidencia}" method="post">
-        <p th:if="${incidencia.idIncidencia != null}">
-            <label for="codigoIncidencia">Código generado</label>
+        <div class="form-error" th:if="${#fields.hasGlobalErrors()}" role="alert">
+            <p th:each="error : ${#fields.globalErrors()}" th:text="${error}"></p>
+        </div>
+
+        <p class="section-label">Información general</p>
+
+        <div class="field" th:if="*{idIncidencia != null}">
+            <label for="codigoIncidencia">Código de incidencia</label>
             <input id="codigoIncidencia" type="text" th:field="*{codigoIncidencia}" readonly>
-        </p>
-        <p th:if="${#fields.hasGlobalErrors()}" th:each="error : ${#fields.globalErrors()}"
-           th:text="${error}" role="alert"></p>
+        </div>
 
-        <label for="titulo">Título</label>
-        <input id="titulo" type="text" maxlength="120" th:field="*{titulo}">
-        <small th:if="${#fields.hasErrors('titulo')}" th:errors="*{titulo}" role="alert"></small>
+        <div class="field">
+            <label for="titulo">Título</label>
+            <input id="titulo" type="text" maxlength="120" th:field="*{titulo}"
+                   placeholder="Ej. Widget deja de funcionar — 403 Forbidden" required>
+            <small class="field-error" th:if="${#fields.hasErrors('titulo')}" th:errors="*{titulo}" role="alert"></small>
+        </div>
 
-        <label for="modulo">Módulo</label>
-        <input id="modulo" type="text" maxlength="80" th:field="*{modulo}">
-        <small th:if="${#fields.hasErrors('modulo')}" th:errors="*{modulo}" role="alert"></small>
+        <div class="row">
+            <div class="field">
+                <label for="modulo">Módulo</label>
+                <input id="modulo" type="text" maxlength="80" th:field="*{modulo}"
+                       placeholder="Ej. CRM &gt; Clientes" required>
+                <small class="field-error" th:if="${#fields.hasErrors('modulo')}" th:errors="*{modulo}" role="alert"></small>
+            </div>
+            <div class="field">
+                <label for="entornoVersion">Entorno / versión <span class="opt">(opcional)</span></label>
+                <input id="entornoVersion" type="text" maxlength="60" th:field="*{entornoVersion}"
+                       placeholder="Ej. Producción — v2.4">
+                <small class="field-error" th:if="${#fields.hasErrors('entornoVersion')}" th:errors="*{entornoVersion}" role="alert"></small>
+            </div>
+        </div>
 
-        <label for="entornoVersion">Entorno / versión</label>
-        <input id="entornoVersion" type="text" maxlength="60" th:field="*{entornoVersion}">
-        <small th:if="${#fields.hasErrors('entornoVersion')}" th:errors="*{entornoVersion}" role="alert"></small>
+        <div class="field">
+            <label for="descripcion">Descripción</label>
+            <textarea id="descripcion" maxlength="1000" th:field="*{descripcion}"
+                      placeholder="Qué ocurre, dónde, y por qué es un problema" required></textarea>
+            <small class="field-error" th:if="${#fields.hasErrors('descripcion')}" th:errors="*{descripcion}" role="alert"></small>
+        </div>
 
-        <label for="descripcion">Descripción</label>
-        <textarea id="descripcion" maxlength="1000" th:field="*{descripcion}"></textarea>
-        <small th:if="${#fields.hasErrors('descripcion')}" th:errors="*{descripcion}" role="alert"></small>
+        <p class="section-label">Severidad</p>
+        <fieldset class="field severity-field">
+            <legend class="visually-hidden">Selecciona la severidad</legend>
+            <div class="sev-options">
+                <label class="sev-pill">
+                    <input type="radio" th:field="*{severidad}" value="BAJA">
+                    <span class="sev-baja">Baja</span>
+                </label>
+                <label class="sev-pill">
+                    <input type="radio" th:field="*{severidad}" value="MEDIA">
+                    <span class="sev-media">Media</span>
+                </label>
+                <label class="sev-pill">
+                    <input type="radio" th:field="*{severidad}" value="ALTA">
+                    <span class="sev-alta">Alta</span>
+                </label>
+                <label class="sev-pill">
+                    <input type="radio" th:field="*{severidad}" value="CRITICA">
+                    <span class="sev-critica">Crítica</span>
+                </label>
+            </div>
+            <small class="field-error" th:if="${#fields.hasErrors('severidad')}" th:errors="*{severidad}" role="alert"></small>
+        </fieldset>
 
-        <label for="pasos">Pasos para reproducir (opcional)</label>
-        <textarea id="pasos" maxlength="1000" th:field="*{pasos}"></textarea>
-        <small th:if="${#fields.hasErrors('pasos')}" th:errors="*{pasos}" role="alert"></small>
+        <p class="section-label">Reproducción</p>
 
-        <label for="resultadoEsperado">Resultado esperado (opcional)</label>
-        <textarea id="resultadoEsperado" maxlength="500" th:field="*{resultadoEsperado}"></textarea>
-        <small th:if="${#fields.hasErrors('resultadoEsperado')}" th:errors="*{resultadoEsperado}" role="alert"></small>
+        <div class="field">
+            <label for="pasos">Pasos para reproducir <span class="opt">(opcional)</span></label>
+            <textarea id="pasos" maxlength="1000" th:field="*{pasos}"
+                      placeholder="1. Entrar a...&#10;2. Dar clic en...&#10;3. Observar que..."></textarea>
+            <small class="field-error" th:if="${#fields.hasErrors('pasos')}" th:errors="*{pasos}" role="alert"></small>
+        </div>
 
-        <label for="resultadoActual">Resultado actual (opcional)</label>
-        <textarea id="resultadoActual" maxlength="500" th:field="*{resultadoActual}"></textarea>
-        <small th:if="${#fields.hasErrors('resultadoActual')}" th:errors="*{resultadoActual}" role="alert"></small>
+        <div class="row">
+            <div class="field">
+                <label for="resultadoEsperado">Resultado esperado <span class="opt">(opcional)</span></label>
+                <textarea id="resultadoEsperado" maxlength="500" th:field="*{resultadoEsperado}"></textarea>
+                <small class="field-error" th:if="${#fields.hasErrors('resultadoEsperado')}" th:errors="*{resultadoEsperado}" role="alert"></small>
+            </div>
+            <div class="field">
+                <label for="resultadoActual">Resultado actual <span class="opt">(opcional)</span></label>
+                <textarea id="resultadoActual" maxlength="500" th:field="*{resultadoActual}"></textarea>
+                <small class="field-error" th:if="${#fields.hasErrors('resultadoActual')}" th:errors="*{resultadoActual}" role="alert"></small>
+            </div>
+        </div>
 
-        <label for="severidad">Severidad</label>
-        <select id="severidad" th:field="*{severidad}">
-            <option value="">Selecciona una severidad</option>
-            <option value="BAJA">BAJA</option>
-            <option value="MEDIA">MEDIA</option>
-            <option value="ALTA">ALTA</option>
-            <option value="CRITICA">CRITICA</option>
-        </select>
-        <small th:if="${#fields.hasErrors('severidad')}" th:errors="*{severidad}" role="alert"></small>
+        <p class="section-label">Evidencia <span class="section-note">(opcional)</span></p>
+        <div class="field">
+            <label for="evidencia">URL o ruta de la evidencia</label>
+            <input id="evidencia" type="text" maxlength="500" th:field="*{evidencia}"
+                   placeholder="Pega un enlace o escribe la ruta de la captura">
+            <small class="field-error" th:if="${#fields.hasErrors('evidencia')}" th:errors="*{evidencia}" role="alert"></small>
+        </div>
 
-        <label for="comentario">Comentario</label>
-        <textarea id="comentario" maxlength="500" th:field="*{comentario}"></textarea>
-        <small th:if="${#fields.hasErrors('comentario')}" th:errors="*{comentario}" role="alert"></small>
+        <div class="field">
+            <label for="comentario">Comentarios <span class="opt">(opcional)</span></label>
+            <textarea id="comentario" maxlength="500" th:field="*{comentario}"
+                      placeholder="Notas adicionales, hipótesis de causa raíz, incidencias relacionadas"></textarea>
+            <small class="field-error" th:if="${#fields.hasErrors('comentario')}" th:errors="*{comentario}" role="alert"></small>
+        </div>
 
-        <label for="evidencia">Evidencia (URL o ruta)</label>
-        <input id="evidencia" type="text" maxlength="500" th:field="*{evidencia}">
-        <small th:if="${#fields.hasErrors('evidencia')}" th:errors="*{evidencia}" role="alert"></small>
-
-        <button type="submit">Guardar</button>
-        <a th:href="@{/incidencias}">Cancelar</a>
+        <div class="actions">
+            <a class="btn-ghost" th:href="@{/incidencias}">Cancelar</a>
+            <button class="btn-primary" type="submit"
+                    th:text="${incidencia.idIncidencia == null ? 'Guardar incidencia' : 'Guardar cambios'}">Guardar incidencia</button>
+        </div>
     </form>
 </main>
 </body>
