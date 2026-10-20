@@ -6,6 +6,7 @@ import com.TestTrackQA.testTrack.model.Incidencia;
 import com.TestTrackQA.testTrack.service.IIncidenciaService;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,13 +23,10 @@ import java.util.List;
 
 @RestController
 @RequestMapping ("/api/incidencias")
+@RequiredArgsConstructor
 public class IncidenciaRestController {
 
     private final IIncidenciaService prodServ;
-
-    public IncidenciaRestController(IIncidenciaService prodServ) {
-        this.prodServ = prodServ;
-    }
 
 
     @GetMapping

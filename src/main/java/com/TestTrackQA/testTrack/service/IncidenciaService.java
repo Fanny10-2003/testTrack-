@@ -4,6 +4,7 @@ import com.TestTrackQA.testTrack.model.Incidencia;
 import com.TestTrackQA.testTrack.model.EstadoIncidencia;
 import com.TestTrackQA.testTrack.repository.IIncidenciaRepository;
 import jakarta.persistence.EntityNotFoundException;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -12,13 +13,11 @@ import java.util.List;
 
 
 @Service
+@RequiredArgsConstructor
 public class IncidenciaService implements  IIncidenciaService {
 
     private final IIncidenciaRepository prodRepo;
 
-    public IncidenciaService(IIncidenciaRepository prodRepo) {
-        this.prodRepo = prodRepo;
-    }
 
     @Override
     public List<Incidencia> traerIncidencias() {
