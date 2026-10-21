@@ -43,6 +43,8 @@
                 <button class="chip active" type="button" data-filter="all" aria-pressed="true">Todas</button>
                 <button class="chip" type="button" data-filter="ABIERTO" aria-pressed="false">Abiertas</button>
                 <button class="chip" type="button" data-filter="CERRADO" aria-pressed="false">Cerradas</button>
+                <button class="chip" type="button" data-filter="EN_PROGRESO" aria-pressed="false">En progreso</button>
+                <button class="chip" type="button" data-filter="RESUELTO" aria-pressed="false">Resueltas</button>
             </div>
             <label>
                 <span class="visually-hidden">Buscar por código o título</span>
@@ -73,6 +75,8 @@
                              th:text="${'Proyecto: ' + incidencia.proyecto.nombre}">Proyecto</div>
                         <div class="module" th:if="${incidencia.usuario != null}"
                              th:text="${'Reportado por: ' + incidencia.usuario.nombre}">Reportado por</div>
+                        <div class="module" th:if="${incidencia.desarrolladorAsignado != null}"
+                             th:text="${'Asignado a: ' + incidencia.desarrolladorAsignado.nombre}">Asignado a</div>
                     </td>
                     <td>
                         <span class="severity"
@@ -81,7 +85,7 @@
                     </td>
                     <td>
                         <span class="status"
-                              th:classappend="${incidencia.estado.name() == 'ABIERTO' ? ' status-abierto' : ' status-cerrado'}"
+                              th:classappend="${incidencia.estado.name() == 'ABIERTO' ? ' status-abierto' : (incidencia.estado.name() == 'CERRADO' ? ' status-cerrado' : ' status-progreso')}"
                               th:text="${incidencia.estado.name()}">ABIERTO</span>
                     </td>
                     <td class="date">
@@ -91,11 +95,19 @@
                     <td>
                         <div class="actions">
                             <a class="action-link" th:href="@{/incidencias/{id}(id=${incidencia.idIncidencia})}">Ver</a>
+                            <form th:if="${incidencia.desarrolladorAsignado == null and (incidencia.estado.name() == 'ABIERTO' or incidencia.estado.name() == 'EN_PROGRESO')}"
+                                  th:action="@{/incidencias/{id}/tomar(id=${incidencia.idIncidencia})}" method="post">
+                                <button class="action-button" type="submit">Tomar</button>
+                            </form>
+                            <form th:if="${incidencia.desarrolladorAsignado != null and incidencia.desarrolladorAsignado.correo.equalsIgnoreCase(correoUsuario)}"
+                                  th:action="@{/incidencias/{id}/liberar(id=${incidencia.idIncidencia})}" method="post">
+                                <button class="action-button" type="submit">Liberar</button>
+                            </form>
                             <form th:action="@{/incidencias/{id}/estado(id=${incidencia.idIncidencia})}" method="post">
                                 <input type="hidden" name="estado"
-                                       th:value="${incidencia.estado.name() == 'ABIERTO' ? 'CERRADO' : 'ABIERTO'}">
+                                       th:value="${incidencia.estado.name() == 'ABIERTO' ? 'CERRADO' : (incidencia.estado.name() == 'CERRADO' ? 'ABIERTO' : (incidencia.estado.name() == 'EN_PROGRESO' ? 'RESUELTO' : 'EN_PROGRESO'))}">
                                 <button class="action-button" type="submit"
-                                        th:text="${incidencia.estado.name() == 'ABIERTO' ? 'Cerrar' : 'Reabrir'}">Cerrar</button>
+                                        th:text="${incidencia.estado.name() == 'ABIERTO' ? 'Cerrar' : (incidencia.estado.name() == 'CERRADO' ? 'Reabrir' : (incidencia.estado.name() == 'EN_PROGRESO' ? 'Resolver' : 'Reabrir progreso'))}">Cerrar</button>
                             </form>
                         </div>
                     </td>

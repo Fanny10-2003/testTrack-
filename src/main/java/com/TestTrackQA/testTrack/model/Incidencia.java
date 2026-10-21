@@ -60,6 +60,12 @@ private Proyecto proyecto;
 @EqualsAndHashCode.Exclude
 private Usuario usuario;
 
+@ManyToOne(fetch = FetchType.LAZY)
+@JoinColumn(name = "id_desarrollador_asignado")
+@ToString.Exclude
+@EqualsAndHashCode.Exclude
+private Usuario desarrolladorAsignado;
+
 @PostLoad
 private void establecerEstadoPorDefectoParaRegistrosExistentes() {
     if (estado == null) {

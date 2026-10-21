@@ -9,6 +9,8 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -46,11 +48,16 @@ public class IncidenciaRestController {
     }
 
     @PostMapping
-    public ResponseEntity<?> crearIncidencia(@Valid @RequestBody IncidenciaDTO incidencia) {
+    public ResponseEntity<?> crearIncidencia(@Valid @RequestBody IncidenciaDTO incidencia,
+                                             Authentication authentication) {
         try {
             Incidencia incidenciaCreada = incidenciaService.crearIncidencia(incidencia.toEntity(),
-                    incidencia.getProyectoId(), incidencia.getUsuarioId());
+                    incidencia.getProyectoId(), authentication.getName());
             return ResponseEntity.status(HttpStatus.CREATED).body(IncidenciaDTO.fromEntity(incidenciaCreada));
+        } catch (EntityNotFoundException ex) {
+            return ResponseEntity.notFound().build();
+        } catch (AccessDeniedException ex) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ex.getMessage());
         } catch (IllegalArgumentException ex) {
             return ResponseEntity.badRequest().body(ex.getMessage());
         }
@@ -59,13 +66,16 @@ public class IncidenciaRestController {
     @PutMapping("/{codIncidencia}")
     public ResponseEntity<?> editarIncidencia(
             @PathVariable Long codIncidencia,
-            @Valid @RequestBody IncidenciaDTO incidencia) {
+            @Valid @RequestBody IncidenciaDTO incidencia,
+            Authentication authentication) {
         try {
-            Incidencia actualizada = incidenciaService.editarIncidencia(codIncidencia, incidencia.toEntity(),
-                    incidencia.getProyectoId(), incidencia.getUsuarioId());
+            Incidencia actualizada = incidenciaService.editarIncidenciaEnProyecto(codIncidencia, incidencia.toEntity(),
+                    incidencia.getProyectoId(), authentication.getName());
             return ResponseEntity.ok(IncidenciaDTO.fromEntity(actualizada));
         } catch (EntityNotFoundException ex) {
             return ResponseEntity.notFound().build();
+        } catch (AccessDeniedException ex) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ex.getMessage());
         } catch (IllegalArgumentException ex) {
             return ResponseEntity.badRequest().body(ex.getMessage());
         }
@@ -73,13 +83,46 @@ public class IncidenciaRestController {
 
     @PatchMapping("/{codIncidencia}/estado")
     public ResponseEntity<?> cambiarEstado(@PathVariable Long codIncidencia,
-                                          @RequestParam EstadoIncidencia estado) {
+                                          @RequestParam EstadoIncidencia estado,
+                                          @RequestParam Long proyectoId,
+                                          Authentication authentication) {
         try {
-            return ResponseEntity.ok(incidenciaService.cambiarEstado(codIncidencia, estado));
+            return ResponseEntity.ok(IncidenciaDTO.fromEntity(incidenciaService.cambiarEstadoEnProyecto(
+                    codIncidencia, proyectoId, estado, authentication.getName())));
         } catch (EntityNotFoundException ex) {
             return ResponseEntity.notFound().build();
+        } catch (AccessDeniedException ex) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ex.getMessage());
         } catch (IllegalStateException ex) {
             return ResponseEntity.badRequest().body(ex.getMessage());
+        }
+    }
+
+    @PostMapping("/{codIncidencia}/tomar")
+    public ResponseEntity<?> tomarIncidencia(@PathVariable Long codIncidencia, Authentication authentication) {
+        try {
+            return ResponseEntity.ok(IncidenciaDTO.fromEntity(
+                    incidenciaService.tomarIncidencia(codIncidencia, authentication.getName())));
+        } catch (EntityNotFoundException ex) {
+            return ResponseEntity.notFound().build();
+        } catch (AccessDeniedException ex) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ex.getMessage());
+        } catch (IllegalStateException ex) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(ex.getMessage());
+        }
+    }
+
+    @PostMapping("/{codIncidencia}/liberar")
+    public ResponseEntity<?> liberarIncidencia(@PathVariable Long codIncidencia, Authentication authentication) {
+        try {
+            return ResponseEntity.ok(IncidenciaDTO.fromEntity(
+                    incidenciaService.liberarIncidencia(codIncidencia, authentication.getName())));
+        } catch (EntityNotFoundException ex) {
+            return ResponseEntity.notFound().build();
+        } catch (AccessDeniedException ex) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ex.getMessage());
+        } catch (IllegalStateException ex) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(ex.getMessage());
         }
     }
 }

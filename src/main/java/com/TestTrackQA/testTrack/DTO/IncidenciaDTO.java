@@ -60,6 +60,8 @@ public class IncidenciaDTO {
 
     private String proyectoNombre;
     private String usuarioNombre;
+    private Long desarrolladorAsignadoId;
+    private String desarrolladorAsignadoNombre;
 
     public Incidencia toEntity() {
         Incidencia incidencia = new Incidencia();
@@ -99,6 +101,10 @@ public class IncidenciaDTO {
         if (incidencia.getUsuario() != null) {
             dto.setUsuarioId(incidencia.getUsuario().getIdUsuario());
             dto.setUsuarioNombre(incidencia.getUsuario().getNombre());
+        }
+        if (incidencia.getDesarrolladorAsignado() != null) {
+            dto.setDesarrolladorAsignadoId(incidencia.getDesarrolladorAsignado().getIdUsuario());
+            dto.setDesarrolladorAsignadoNombre(incidencia.getDesarrolladorAsignado().getNombre());
         }
         return dto;
     }

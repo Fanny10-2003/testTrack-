@@ -33,7 +33,7 @@
                 <div class="hero-kicker">
                     <span class="code" th:text="${incidencia.codigoIncidencia}">BUG-001</span>
                     <span class="status"
-                          th:classappend="${incidencia.estado.name() == 'ABIERTO' ? ' status-abierto' : ' status-cerrado'}"
+                          th:classappend="${incidencia.estado.name() == 'ABIERTO' ? ' status-abierto' : (incidencia.estado.name() == 'CERRADO' ? ' status-cerrado' : ' status-progreso')}"
                           th:text="${incidencia.estado.name()}">ABIERTO</span>
                 </div>
                 <h1 th:text="${incidencia.titulo}">Título de la incidencia</h1>
@@ -61,6 +61,10 @@
             <div class="metadata-item">
                 <dt>Reportado por</dt>
                 <dd th:text="${incidencia.usuario != null ? incidencia.usuario.nombre : '—'}">Usuario</dd>
+            </div>
+            <div class="metadata-item">
+                <dt>Desarrollador asignado</dt>
+                <dd th:text="${incidencia.desarrolladorAsignado != null ? incidencia.desarrolladorAsignado.nombre : 'Sin asignar'}">Sin asignar</dd>
             </div>
             <div class="metadata-item">
                 <dt>Fecha de creación</dt>

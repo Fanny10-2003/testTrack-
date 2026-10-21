@@ -43,14 +43,17 @@ CREATE TABLE incidencias (
     fecha_modificacion TIMESTAMP WITHOUT TIME ZONE,
     id_proyecto BIGINT NOT NULL,
     id_usuario BIGINT NOT NULL,
+    id_desarrollador_asignado BIGINT,
     CONSTRAINT uk_incidencia_proyecto_codigo
         UNIQUE (id_proyecto, codigo_incidencia),
     CONSTRAINT fk_incidencias_proyecto
         FOREIGN KEY (id_proyecto) REFERENCES proyectos (id_proyecto),
     CONSTRAINT fk_incidencias_usuario
         FOREIGN KEY (id_usuario) REFERENCES usuarios (id_usuario),
+    CONSTRAINT fk_incidencias_desarrollador_asignado
+        FOREIGN KEY (id_desarrollador_asignado) REFERENCES usuarios (id_usuario),
     CONSTRAINT ck_incidencias_estado
-        CHECK (estado IS NULL OR estado IN ('ABIERTO', 'CERRADO'))
+        CHECK (estado IS NULL OR estado IN ('ABIERTO', 'CERRADO', 'EN_PROGRESO', 'RESUELTO'))
 );
 
 CREATE TABLE miembros_proyecto (

@@ -4,14 +4,13 @@ import com.TestTrackQA.testTrack.DTO.IncidenciaDTO;
 import com.TestTrackQA.testTrack.DTO.ProyectoDTO;
 import com.TestTrackQA.testTrack.model.EstadoIncidencia;
 import com.TestTrackQA.testTrack.model.Incidencia;
-import com.TestTrackQA.testTrack.model.Usuario;
 import com.TestTrackQA.testTrack.service.IIncidenciaService;
 import com.TestTrackQA.testTrack.service.IProyectoService;
-import com.TestTrackQA.testTrack.service.IUsuarioService;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -31,7 +30,6 @@ public class IncidenciaController {
 
     private final IIncidenciaService incidenciaService;
     private final IProyectoService proyectoService;
-    private final IUsuarioService usuarioService;
 
     @GetMapping
     public String listar(Authentication authentication, HttpSession session, Model model,
@@ -39,6 +37,7 @@ public class IncidenciaController {
         try {
             ProyectoDTO proyectoActivo = obtenerProyectoActivo(authentication, session);
             model.addAttribute("proyectoActivo", proyectoActivo);
+            model.addAttribute("correoUsuario", authentication.getName());
             model.addAttribute("incidencias",
                     incidenciaService.traerIncidenciasPorProyecto(proyectoActivo.getIdProyecto()));
             return "incidencia/listaIncidencia";
@@ -72,10 +71,8 @@ public class IncidenciaController {
                                   Model model,
                                   RedirectAttributes redirectAttributes) {
         ProyectoDTO proyectoActivo;
-        Usuario reportero;
         try {
             proyectoActivo = obtenerProyectoActivo(authentication, session);
-            reportero = buscarUsuarioAutenticado(authentication);
         } catch (EntityNotFoundException ex) {
             redirectAttributes.addFlashAttribute("error", "Selecciona un proyecto válido para continuar.");
             return "redirect:/proyectos";
@@ -87,8 +84,13 @@ public class IncidenciaController {
             return "incidencia/formulario";
         }
 
-        incidenciaService.crearIncidencia(incidencia.toEntity(),
-                proyectoActivo.getIdProyecto(), reportero.getIdUsuario());
+        try {
+            incidenciaService.crearIncidencia(incidencia.toEntity(),
+                    proyectoActivo.getIdProyecto(), authentication.getName());
+        } catch (AccessDeniedException ex) {
+            redirectAttributes.addFlashAttribute("error", ex.getMessage());
+            return "redirect:/incidencias";
+        }
         return "redirect:/incidencias";
     }
 
@@ -107,6 +109,9 @@ public class IncidenciaController {
             return "incidencia/detalle";
         } catch (EntityNotFoundException ex) {
             redirectAttributes.addFlashAttribute("error", "No se encontró la incidencia en el proyecto activo.");
+            return "redirect:/incidencias";
+        } catch (AccessDeniedException ex) {
+            redirectAttributes.addFlashAttribute("error", ex.getMessage());
             return "redirect:/incidencias";
         }
     }
@@ -156,10 +161,13 @@ public class IncidenciaController {
 
         try {
             incidenciaService.editarIncidenciaEnProyecto(
-                    codIncidencia, incidencia.toEntity(), proyectoActivo.getIdProyecto());
+                    codIncidencia, incidencia.toEntity(), proyectoActivo.getIdProyecto(), authentication.getName());
             return "redirect:/incidencias";
         } catch (EntityNotFoundException ex) {
             redirectAttributes.addFlashAttribute("error", "No se encontró la incidencia en el proyecto activo.");
+            return "redirect:/incidencias";
+        } catch (AccessDeniedException ex) {
+            redirectAttributes.addFlashAttribute("error", ex.getMessage());
             return "redirect:/incidencias";
         }
     }
@@ -173,8 +181,32 @@ public class IncidenciaController {
         try {
             ProyectoDTO proyectoActivo = obtenerProyectoActivo(authentication, session);
             incidenciaService.cambiarEstadoEnProyecto(
-                    codIncidencia, proyectoActivo.getIdProyecto(), estado);
-        } catch (EntityNotFoundException | IllegalStateException ex) {
+                    codIncidencia, proyectoActivo.getIdProyecto(), estado, authentication.getName());
+        } catch (EntityNotFoundException | IllegalStateException | AccessDeniedException ex) {
+            redirectAttributes.addFlashAttribute("error", ex.getMessage());
+        }
+        return "redirect:/incidencias";
+    }
+
+    @PostMapping("/{codIncidencia}/tomar")
+    public String tomarIncidencia(@PathVariable Long codIncidencia,
+                                  Authentication authentication,
+                                  RedirectAttributes redirectAttributes) {
+        try {
+            incidenciaService.tomarIncidencia(codIncidencia, authentication.getName());
+        } catch (EntityNotFoundException | IllegalStateException | AccessDeniedException ex) {
+            redirectAttributes.addFlashAttribute("error", ex.getMessage());
+        }
+        return "redirect:/incidencias";
+    }
+
+    @PostMapping("/{codIncidencia}/liberar")
+    public String liberarIncidencia(@PathVariable Long codIncidencia,
+                                    Authentication authentication,
+                                    RedirectAttributes redirectAttributes) {
+        try {
+            incidenciaService.liberarIncidencia(codIncidencia, authentication.getName());
+        } catch (EntityNotFoundException | IllegalStateException | AccessDeniedException ex) {
             redirectAttributes.addFlashAttribute("error", ex.getMessage());
         }
         return "redirect:/incidencias";
@@ -188,7 +220,4 @@ public class IncidenciaController {
         return proyectoService.buscarPropio(id, authentication.getName());
     }
 
-    private Usuario buscarUsuarioAutenticado(Authentication authentication) {
-        return usuarioService.buscarPorCorreo(authentication.getName());
-    }
 }

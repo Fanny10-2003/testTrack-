@@ -2,5 +2,7 @@ package com.TestTrackQA.testTrack.model;
 
 public enum EstadoIncidencia {
     ABIERTO,
-    CERRADO
+    CERRADO,
+    EN_PROGRESO,
+    RESUELTO
 }
