@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import jakarta.servlet.http.HttpSession;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.Locale;
@@ -30,7 +31,7 @@ public class ProyectoController {
 
     @GetMapping
     public String listar(Authentication authentication, HttpSession session, Model model) {
-        var proyectos = proyectoService.listarDelAdministrador(authentication.getName());
+        var proyectos = proyectoService.listarProyectosDelUsuario(authentication.getName());
         String nombreUsuario = proyectoService.nombreAdministrador(authentication.getName());
         String fotoPerfil = usuarioService.buscarPorCorreo(authentication.getName()).getFotoPerfil();
         model.addAttribute("proyectos", proyectos);
@@ -89,11 +90,14 @@ public class ProyectoController {
                          RedirectAttributes redirectAttributes) {
         try {
             model.addAttribute("proyecto",
-                    proyectoService.buscarPropio(idProyecto, authentication.getName()));
+                    proyectoService.buscarPropioComoAdministrador(idProyecto, authentication.getName()));
             model.addAttribute("titulo", "Editar proyecto");
             return "proyecto/formulario";
         } catch (EntityNotFoundException ex) {
             redirectAttributes.addFlashAttribute("error", "No se encontró el proyecto solicitado.");
+            return "redirect:/proyectos";
+        } catch (AccessDeniedException ex) {
+            redirectAttributes.addFlashAttribute("error", "No tienes permisos para editar este proyecto.");
             return "redirect:/proyectos";
         }
     }
@@ -116,6 +120,9 @@ public class ProyectoController {
         } catch (EntityNotFoundException ex) {
             redirectAttributes.addFlashAttribute("error", "No se encontró el proyecto solicitado.");
             return "redirect:/proyectos";
+        } catch (AccessDeniedException ex) {
+            redirectAttributes.addFlashAttribute("error", "No tienes permisos para editar este proyecto.");
+            return "redirect:/proyectos";
         }
     }
 
@@ -132,6 +139,8 @@ public class ProyectoController {
             redirectAttributes.addFlashAttribute("mensaje", "Proyecto eliminado.");
         } catch (EntityNotFoundException ex) {
             redirectAttributes.addFlashAttribute("error", "No se encontró el proyecto solicitado.");
+        } catch (AccessDeniedException ex) {
+            redirectAttributes.addFlashAttribute("error", "No tienes permisos para eliminar este proyecto.");
         }
         return "redirect:/proyectos";
     }

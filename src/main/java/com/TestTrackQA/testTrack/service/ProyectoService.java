@@ -11,6 +11,7 @@ import com.TestTrackQA.testTrack.repository.IMiembroProyectoRepository;
 import com.TestTrackQA.testTrack.repository.IProyectoRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,15 +32,19 @@ public class ProyectoService implements IProyectoService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<ProyectoDTO> listarDelAdministrador(String correo) {
-        List<Proyecto> proyectos = proyectoRepository.findAllByAdministrador_CorreoIgnoreCaseAndEliminadoFalse(correo);
-        if (proyectos.isEmpty()) {
+    public List<ProyectoDTO> listarProyectosDelUsuario(String correo) {
+        List<MiembroProyecto> membresias = miembroProyectoRepository
+                .findAllByUsuario_CorreoIgnoreCaseAndProyecto_EliminadoFalse(correo);
+        if (membresias.isEmpty()) {
             return List.of();
         }
 
-        Map<Long, ProyectoDTO> proyectosPorId = proyectos.stream()
-                .map(ProyectoDTO::fromEntity)
-                .peek(dto -> dto.setRolUsuario("Administrador"))
+        Map<Long, ProyectoDTO> proyectosPorId = membresias.stream()
+                .map(membresia -> {
+                    ProyectoDTO dto = ProyectoDTO.fromEntity(membresia.getProyecto());
+                    dto.setRolUsuario(nombreRol(membresia.getRol()));
+                    return dto;
+                })
                 .collect(Collectors.toMap(ProyectoDTO::getIdProyecto, Function.identity()));
         List<Long> idsProyecto = proyectosPorId.keySet().stream().toList();
         List<Incidencia> incidencias = incidenciaService.traerIncidenciasPorProyectos(idsProyecto);
@@ -60,8 +65,8 @@ public class ProyectoService implements IProyectoService {
             }
         });
 
-        return proyectos.stream()
-                .map(proyecto -> proyectosPorId.get(proyecto.getIdProyecto()))
+        return membresias.stream()
+                .map(membresia -> proyectosPorId.get(membresia.getProyecto().getIdProyecto()))
                 .toList();
     }
 
@@ -96,13 +101,19 @@ public class ProyectoService implements IProyectoService {
     @Override
     @Transactional(readOnly = true)
     public ProyectoDTO buscarPropio(Long idProyecto, String correoAdministrador) {
-        return ProyectoDTO.fromEntity(buscarProyectoPropio(idProyecto, correoAdministrador));
+        return ProyectoDTO.fromEntity(buscarProyectoMiembro(idProyecto, correoAdministrador));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ProyectoDTO buscarPropioComoAdministrador(Long idProyecto, String correoAdministrador) {
+        return ProyectoDTO.fromEntity(buscarProyectoAdministrador(idProyecto, correoAdministrador));
     }
 
     @Override
     @Transactional
     public void editar(Long idProyecto, ProyectoDTO datos, String correoAdministrador) {
-        Proyecto proyecto = buscarProyectoPropio(idProyecto, correoAdministrador);
+        Proyecto proyecto = buscarProyectoAdministrador(idProyecto, correoAdministrador);
         proyecto.setNombre(datos.getNombre().trim());
         proyecto.setDescripcion(datos.getDescripcion());
         proyecto.setUrlBase(datos.getUrlBase());
@@ -112,7 +123,7 @@ public class ProyectoService implements IProyectoService {
     @Override
     @Transactional
     public void eliminar(Long idProyecto, String correoAdministrador) {
-        Proyecto proyecto = buscarProyectoPropio(idProyecto, correoAdministrador);
+        Proyecto proyecto = buscarProyectoAdministrador(idProyecto, correoAdministrador);
         proyecto.setEliminado(true);
         proyecto.setFecha_modificacion(LocalDateTime.now());
     }
@@ -121,9 +132,28 @@ public class ProyectoService implements IProyectoService {
         return usuarioService.buscarPorCorreo(correo);
     }
 
-    private Proyecto buscarProyectoPropio(Long idProyecto, String correoAdministrador) {
-        return proyectoRepository
-                .findByIdProyectoAndAdministrador_CorreoIgnoreCaseAndEliminadoFalse(idProyecto, correoAdministrador)
+    private Proyecto buscarProyectoMiembro(Long idProyecto, String correo) {
+        return miembroProyectoRepository
+                .findByUsuario_CorreoIgnoreCaseAndProyecto_IdProyectoAndProyecto_EliminadoFalse(correo, idProyecto)
+                .map(MiembroProyecto::getProyecto)
                 .orElseThrow(() -> new EntityNotFoundException("No se encontró el proyecto"));
+    }
+
+    private Proyecto buscarProyectoAdministrador(Long idProyecto, String correo) {
+        MiembroProyecto membresia = miembroProyectoRepository
+                .findByUsuario_CorreoIgnoreCaseAndProyecto_IdProyectoAndProyecto_EliminadoFalse(correo, idProyecto)
+                .orElseThrow(() -> new EntityNotFoundException("No se encontró el proyecto"));
+        if (membresia.getRol() != RolProyecto.ADMINISTRADOR) {
+            throw new AccessDeniedException("Se requiere el rol ADMINISTRADOR para modificar este proyecto");
+        }
+        return membresia.getProyecto();
+    }
+
+    private String nombreRol(RolProyecto rol) {
+        return switch (rol) {
+            case ADMINISTRADOR -> "Administrador";
+            case QA -> "QA";
+            case DESARROLLADOR -> "Desarrollador";
+        };
     }
 }

@@ -5,7 +5,9 @@ import com.TestTrackQA.testTrack.service.IProyectoService;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -29,7 +31,7 @@ public class ProyectoRestController {
 
     @GetMapping
     public List<ProyectoDTO> listar(Authentication authentication) {
-        return proyectoService.listarDelAdministrador(authentication.getName());
+        return proyectoService.listarProyectosDelUsuario(authentication.getName());
     }
 
     @GetMapping("/{idProyecto}")
@@ -66,6 +68,8 @@ public class ProyectoRestController {
             return ResponseEntity.ok(proyectoService.buscarPropio(idProyecto, correoAdministrador));
         } catch (EntityNotFoundException ex) {
             return ResponseEntity.notFound().build();
+        } catch (AccessDeniedException ex) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
     }
 
@@ -76,6 +80,8 @@ public class ProyectoRestController {
             return ResponseEntity.noContent().build();
         } catch (EntityNotFoundException ex) {
             return ResponseEntity.notFound().build();
+        } catch (AccessDeniedException ex) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
     }
 }
