@@ -20,8 +20,13 @@
         <span class="nav-link" aria-disabled="true">Invitaciones</span>
         <a class="nav-link" th:href="@{/perfil}" aria-current="page">Mi perfil</a>
     </nav>
-    <a class="profile" th:href="@{/perfil}" th:text="${iniciales}"
-       th:attr="aria-label=${'Ver perfil de ' + usuarioNombre}" title="Mi perfil">TT</a>
+    <a class="profile" th:href="@{/perfil}"
+       th:attr="aria-label=${'Ver perfil de ' + usuarioNombre}" title="Mi perfil">
+        <img th:if="${fotoPerfil != null}"
+             th:src="@{/images/logo/fotoPerfil/{foto}(foto=${fotoPerfil})}"
+             alt="">
+        <span th:if="${fotoPerfil == null}" th:text="${iniciales}">TT</span>
+    </a>
 </header>
 
 <main class="form-page">
@@ -35,9 +40,29 @@
 
     <p class="notice notice-success" th:if="${mensaje}" th:text="${mensaje}" role="status"></p>
 
-    <form class="project-form profile-form" th:action="@{/perfil}" th:object="${perfil}" method="post">
+    <form id="profile-form" class="project-form profile-form"
+          th:action="@{/perfil}" th:object="${perfil}" method="post">
         <div class="profile-section">
             <h2>Datos personales</h2>
+            <div class="current-avatar">
+                <span class="current-avatar-preview" id="current-avatar-preview">
+                    <img id="current-avatar-image" th:if="${fotoPerfil != null}"
+                         th:src="@{/images/logo/fotoPerfil/{foto}(foto=${fotoPerfil})}" alt="">
+                    <span id="current-avatar-initials" th:if="${fotoPerfil == null}"
+                          th:text="${iniciales}">TT</span>
+                </span>
+                <div class="current-avatar-info">
+                    <strong>Foto de perfil</strong>
+                    <span id="current-avatar-name"
+                          th:text="${fotoPerfil != null ? #strings.replace(fotoPerfil, '.png', '') : 'Sin foto seleccionada'}">
+                        Sin foto seleccionada
+                    </span>
+                </div>
+                <button class="btn-ghost" id="open-avatar-picker" type="button">Elegir foto</button>
+            </div>
+            <input type="hidden" th:field="*{fotoPerfil}">
+            <span class="field-error avatar-error" th:if="${#fields.hasErrors('fotoPerfil')}"
+                  th:errors="*{fotoPerfil}"></span>
             <div class="field">
                 <label for="nombre">Nombre</label>
                 <input id="nombre" type="text" th:field="*{nombre}" autocomplete="name" required>
@@ -93,5 +118,36 @@
         </form>
     </section>
 </main>
+<div class="avatar-modal-backdrop" id="avatar-picker" hidden>
+    <section class="avatar-modal" role="dialog" aria-modal="true"
+             aria-labelledby="avatar-modal-title" aria-describedby="avatar-modal-description">
+        <header class="avatar-modal-head">
+            <div>
+                <h2 id="avatar-modal-title">Elige tu foto de perfil</h2>
+                <p id="avatar-modal-description">Selecciona la imagen que quieres mostrar en tu cuenta.</p>
+            </div>
+            <button class="avatar-modal-close" id="close-avatar-picker" type="button"
+                    aria-label="Cerrar selector de fotos">×</button>
+        </header>
+        <fieldset class="avatar-gallery">
+            <legend class="visually-hidden">Fotos de perfil disponibles</legend>
+            <label class="avatar-option" th:each="foto, iter : ${fotosPerfil}">
+                <input type="radio" name="avatarChoice" th:value="${foto}"
+                       th:checked="${foto == perfil.fotoPerfil}"
+                       th:id="${'fotoPerfil-opcion-' + iter.index}">
+                <span class="avatar-option-image">
+                    <img th:src="@{/images/logo/fotoPerfil/{archivo}(archivo=${foto})}"
+                         th:alt="${'Foto de perfil ' + (iter.index + 1)}">
+                </span>
+                <span class="avatar-option-name" th:text="${#strings.replace(foto, '.png', '')}">Gato</span>
+            </label>
+        </fieldset>
+        <footer class="avatar-modal-actions">
+            <button class="btn-ghost" id="cancel-avatar-picker" type="button">Cancelar</button>
+            <button class="btn-primary" id="use-avatar" type="button">Usar esta foto</button>
+        </footer>
+    </section>
+</div>
+<script th:src="@{/proyecto/perfil.js}" defer></script>
 </body>
 </html>

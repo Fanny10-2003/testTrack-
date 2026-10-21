@@ -41,6 +41,8 @@ public class Usuario {
     @NotBlank
     @Column(nullable = false, length = 50)
     private String rol;
+    @Column(name = "foto_perfil", length = 100)
+    private String fotoPerfil;
     private LocalDateTime fechaCreacion;
     private LocalDateTime fechaModificacion;
 

@@ -3,7 +3,6 @@ package com.TestTrackQA.testTrack.controller;
 import com.TestTrackQA.testTrack.DTO.PerfilDTO;
 import com.TestTrackQA.testTrack.model.Usuario;
 import com.TestTrackQA.testTrack.service.IUsuarioService;
-import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -42,6 +41,7 @@ public class PerfilController {
         PerfilDTO perfil = new PerfilDTO();
         perfil.setNombre(usuario.getNombre());
         perfil.setCorreo(usuario.getCorreo());
+        perfil.setFotoPerfil(usuario.getFotoPerfil());
         prepararVista(model, perfil, usuario.getNombre());
         return "perfil";
     }
@@ -66,6 +66,12 @@ public class PerfilController {
                 && usuarioService.existePorCorreo(correoNormalizado)) {
             bindingResult.rejectValue("correo", "correo.duplicado",
                     "Ya existe una cuenta con ese correo");
+        }
+
+        if (!estaVacio(perfil.getFotoPerfil())
+                && !usuarioService.fotoPerfilPermitida(perfil.getFotoPerfil())) {
+            bindingResult.rejectValue("fotoPerfil", "fotoPerfil.invalida",
+                    "Selecciona una foto de perfil válida");
         }
 
         boolean quiereCambiarContrasena = !estaVacio(perfil.getContrasenaActual())
@@ -107,6 +113,9 @@ public class PerfilController {
 
         usuario.setNombre(nombreNormalizado);
         usuario.setCorreo(correoNormalizado);
+        if (!estaVacio(perfil.getFotoPerfil())) {
+            usuario.setFotoPerfil(perfil.getFotoPerfil());
+        }
         usuario.setFechaModificacion(LocalDateTime.now());
         if (quiereCambiarContrasena) {
             usuario.setContrasena(passwordEncoder.encode(perfil.getNuevaContrasena()));
@@ -143,6 +152,8 @@ public class PerfilController {
         model.addAttribute("perfil", perfil);
         model.addAttribute("usuarioNombre", nombreUsuario);
         model.addAttribute("iniciales", iniciales(nombreUsuario));
+        model.addAttribute("fotoPerfil", perfil.getFotoPerfil());
+        model.addAttribute("fotosPerfil", usuarioService.fotosPerfilDisponibles());
     }
 
     private boolean estaVacio(String valor) {

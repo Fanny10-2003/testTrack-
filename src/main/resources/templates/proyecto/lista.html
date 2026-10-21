@@ -20,8 +20,13 @@
         <span class="nav-link" aria-disabled="true">Invitaciones</span>
         <a class="nav-link" th:href="@{/perfil}">Mi perfil</a>
     </nav>
-    <a class="profile" th:href="@{/perfil}" th:text="${iniciales}"
-       th:attr="aria-label=${'Ver perfil de ' + usuarioNombre}" title="Ver perfil">TT</a>
+    <a class="profile" th:href="@{/perfil}"
+       th:attr="aria-label=${'Ver perfil de ' + usuarioNombre}" title="Ver perfil">
+        <img th:if="${fotoPerfil != null}"
+             th:src="@{/images/logo/fotoPerfil/{foto}(foto=${fotoPerfil})}"
+             alt="">
+        <span th:if="${fotoPerfil == null}" th:text="${iniciales}">TT</span>
+    </a>
 </header>
 
 <main class="dashboard">

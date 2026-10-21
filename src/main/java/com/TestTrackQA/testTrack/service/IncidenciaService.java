@@ -16,10 +16,14 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Service
 @RequiredArgsConstructor
 public class IncidenciaService implements IIncidenciaService {
+
+    private static final Pattern CODIGO_INCIDENCIA_PATTERN = Pattern.compile("^BUG-(\\d+)$");
 
     private final IIncidenciaRepository incidenciaRepository;
     private final IProyectoRepository proyectoRepository;
@@ -63,9 +67,24 @@ public class IncidenciaService implements IIncidenciaService {
         incidencia.setEstado(EstadoIncidencia.ABIERTO);
         incidencia.setCodigoIncidencia(null);
 
+        int siguienteNumero = incidenciaRepository.findAll().stream()
+                .filter(registrada -> registrada.getProyecto().getIdProyecto().equals(proyectoId))
+                .mapToInt(this::obtenerNumeroCodigo)
+                .max()
+                .orElse(0) + 1;
+
         Incidencia guardada = incidenciaRepository.save(incidencia);
-        guardada.setCodigoIncidencia(String.format("BUG-%03d", guardada.getIdIncidencia()));
+        guardada.setCodigoIncidencia(String.format("BUG-%03d", siguienteNumero));
         return incidenciaRepository.save(guardada);
+    }
+
+    private int obtenerNumeroCodigo(Incidencia incidencia) {
+        String codigo = incidencia.getCodigoIncidencia();
+        if (codigo == null) {
+            return 0;
+        }
+        Matcher matcher = CODIGO_INCIDENCIA_PATTERN.matcher(codigo);
+        return matcher.matches() ? Integer.parseInt(matcher.group(1)) : 0;
     }
 
     @Override

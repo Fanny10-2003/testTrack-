@@ -92,6 +92,25 @@ public class IncidenciaController {
         return "redirect:/incidencias";
     }
 
+    @GetMapping("/{codIncidencia}")
+    public String verDetalle(@PathVariable Long codIncidencia,
+                             Authentication authentication,
+                             HttpSession session,
+                             Model model,
+                             RedirectAttributes redirectAttributes) {
+        try {
+            ProyectoDTO proyectoActivo = obtenerProyectoActivo(authentication, session);
+            Incidencia incidencia = incidenciaService.buscarIncidenciaEnProyecto(
+                    codIncidencia, proyectoActivo.getIdProyecto());
+            model.addAttribute("incidencia", incidencia);
+            model.addAttribute("proyectoActivo", proyectoActivo);
+            return "incidencia/detalle";
+        } catch (EntityNotFoundException ex) {
+            redirectAttributes.addFlashAttribute("error", "No se encontró la incidencia en el proyecto activo.");
+            return "redirect:/incidencias";
+        }
+    }
+
     @GetMapping("/editar/{codIncidencia}")
     public String mostrarFormularioEditar(@PathVariable Long codIncidencia,
                                           Authentication authentication,

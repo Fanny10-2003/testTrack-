@@ -2,6 +2,7 @@ package com.TestTrackQA.testTrack.controller;
 
 import com.TestTrackQA.testTrack.DTO.ProyectoDTO;
 import com.TestTrackQA.testTrack.service.IProyectoService;
+import com.TestTrackQA.testTrack.service.IUsuarioService;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -25,15 +26,18 @@ import java.util.Locale;
 public class ProyectoController {
 
     private final IProyectoService proyectoService;
+    private final IUsuarioService usuarioService;
 
     @GetMapping
     public String listar(Authentication authentication, HttpSession session, Model model) {
         var proyectos = proyectoService.listarDelAdministrador(authentication.getName());
         String nombreUsuario = proyectoService.nombreAdministrador(authentication.getName());
+        String fotoPerfil = usuarioService.buscarPorCorreo(authentication.getName()).getFotoPerfil();
         model.addAttribute("proyectos", proyectos);
         model.addAttribute("proyectoActivoId", session.getAttribute("proyectoActivoId"));
         model.addAttribute("usuarioNombre", nombreUsuario);
         model.addAttribute("iniciales", iniciales(nombreUsuario));
+        model.addAttribute("fotoPerfil", fotoPerfil);
         model.addAttribute("totalIncidencias", proyectos.stream().mapToLong(ProyectoDTO::getTotalIncidencias).sum());
         model.addAttribute("criticasAbiertas", proyectos.stream().mapToLong(ProyectoDTO::getCriticasAbiertas).sum());
         model.addAttribute("incidenciasAbiertas", proyectos.stream().mapToLong(ProyectoDTO::getIncidenciasAbiertas).sum());

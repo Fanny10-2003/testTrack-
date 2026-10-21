@@ -90,7 +90,7 @@
                     </td>
                     <td>
                         <div class="actions">
-                            <a class="action-link" th:href="@{/incidencias/editar/{id}(id=${incidencia.idIncidencia})}">Editar</a>
+                            <a class="action-link" th:href="@{/incidencias/{id}(id=${incidencia.idIncidencia})}">Ver</a>
                             <form th:action="@{/incidencias/{id}/estado(id=${incidencia.idIncidencia})}" method="post">
                                 <input type="hidden" name="estado"
                                        th:value="${incidencia.estado.name() == 'ABIERTO' ? 'CERRADO' : 'ABIERTO'}">

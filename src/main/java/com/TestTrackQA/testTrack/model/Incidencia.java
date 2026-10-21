@@ -9,18 +9,23 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 import java.time.LocalDateTime;
 import jakarta.persistence.Column;
+import jakarta.persistence.UniqueConstraint;
 
 
 @Entity
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "incidencias")
+@Table(
+        name = "incidencias",
+        uniqueConstraints = @UniqueConstraint(
+                name = "uk_incidencia_proyecto_codigo",
+                columnNames = {"id_proyecto", "codigo_incidencia"}))
 public class Incidencia {
 @Id
 @GeneratedValue(strategy = GenerationType.IDENTITY)
 private Long idIncidencia;
-@Column(unique = true, length = 24)
+@Column(length = 24)
 private String codigoIncidencia;
 private String titulo;
 private String modulo;

@@ -17,6 +17,7 @@ public class PerfilDTO {
     @Size(max = 254, message = "El correo no puede superar los 254 caracteres")
     private String correo;
 
+    private String fotoPerfil;
     private String contrasenaActual;
     private String nuevaContrasena;
     private String confirmarContrasena;

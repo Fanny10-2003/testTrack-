@@ -14,6 +14,7 @@ public class UsuarioDTO {
     private String nombre;
     private String correo;
     private String rol;
+    private String fotoPerfil;
     private LocalDateTime fechaCreacion;
     private LocalDateTime fechaModificacion;
 
@@ -23,6 +24,7 @@ public class UsuarioDTO {
         usuario.setNombre(nombre);
         usuario.setCorreo(correo);
         usuario.setRol(rol);
+        usuario.setFotoPerfil(fotoPerfil);
         usuario.setFechaCreacion(fechaCreacion);
         usuario.setFechaModificacion(fechaModificacion);
         return usuario;
@@ -34,6 +36,7 @@ public class UsuarioDTO {
         dto.setNombre(usuario.getNombre());
         dto.setCorreo(usuario.getCorreo());
         dto.setRol(usuario.getRol());
+        dto.setFotoPerfil(usuario.getFotoPerfil());
         dto.setFechaCreacion(usuario.getFechaCreacion());
         dto.setFechaModificacion(usuario.getFechaModificacion());
         return dto;

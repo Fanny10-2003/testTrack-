@@ -7,9 +7,22 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class UsuarioService implements IUsuarioService {
+
+    private static final List<String> FOTOS_PERFIL = List.of(
+            "Gato uno.png",
+            "Gato dos.png",
+            "Gato tres.png",
+            "Gato cuatro.png",
+            "Gato cinco.png",
+            "Gato seis.png",
+            "Gato siete.png",
+            "Gato ocho.png",
+            "Gato nueve.png");
 
     private final IUsuarioRepository usuarioRepository;
 
@@ -32,6 +45,16 @@ public class UsuarioService implements IUsuarioService {
     @Transactional(readOnly = true)
     public boolean existePorCorreo(String correo) {
         return usuarioRepository.existsByCorreoIgnoreCase(correo);
+    }
+
+    @Override
+    public List<String> fotosPerfilDisponibles() {
+        return FOTOS_PERFIL;
+    }
+
+    @Override
+    public boolean fotoPerfilPermitida(String nombreArchivo) {
+        return FOTOS_PERFIL.contains(nombreArchivo);
     }
 
     @Override

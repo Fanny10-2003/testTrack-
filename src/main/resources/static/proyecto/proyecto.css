@@ -44,7 +44,10 @@ h1, h2, .brand { font-family: 'Sora', sans-serif; }
     color: #fff;
     font: 700 13px 'Sora', sans-serif;
     text-decoration: none;
+    overflow: hidden;
 }
+
+.profile img { width: 100%; height: 100%; object-fit: cover; }
 
 .page { max-width: 1120px; margin: 0 auto; padding: 42px 40px 70px; }
 .form-page { max-width: 760px; margin: 0 auto; padding: 42px 40px 70px; }
@@ -107,6 +110,32 @@ h1, h2, .brand { font-family: 'Sora', sans-serif; }
 .profile-section + .profile-section { margin-top: 30px; padding-top: 26px; border-top: 1px solid var(--border); }
 .profile-section h2, .logout-card h2 { margin: 0 0 16px; font: 700 17px 'Sora', sans-serif; }
 .profile-help, .logout-card p { margin: -8px 0 18px; color: var(--text-dim); font-size: 13px; }
+.current-avatar { display: flex; align-items: center; gap: 14px; margin-bottom: 22px; padding: 16px; border: 1px solid var(--border); border-radius: 12px; background: #FBFAFE; }
+.current-avatar-preview { display: grid; width: 76px; height: 76px; flex: 0 0 76px; place-items: center; overflow: hidden; border-radius: 50%; background: linear-gradient(135deg, var(--violet), var(--blue)); color: #fff; font: 700 20px 'Sora', sans-serif; }
+.current-avatar-preview img { width: 100%; height: 100%; object-fit: cover; }
+.current-avatar-info { display: flex; min-width: 0; flex: 1; flex-direction: column; gap: 5px; }
+.current-avatar-info strong { font-size: 14px; }
+.current-avatar-info span { color: var(--text-dim); font-size: 13px; }
+.avatar-error { margin: -14px 0 20px; }
+.avatar-modal-backdrop { position: fixed; z-index: 1000; inset: 0; display: grid; place-items: center; overflow-y: auto; padding: 24px; background: rgba(28, 21, 48, .58); }
+.avatar-modal-backdrop[hidden] { display: none; }
+body.avatar-modal-open { overflow: hidden; }
+.avatar-modal { width: min(760px, 100%); max-height: min(760px, calc(100vh - 48px)); overflow-y: auto; padding: 28px; border: 1px solid var(--border); border-radius: 18px; background: var(--surface); box-shadow: 0 24px 80px rgba(28, 21, 48, .24); }
+.avatar-modal-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; margin-bottom: 22px; }
+.avatar-modal-head h2 { margin: 0; font: 700 20px 'Sora', sans-serif; }
+.avatar-modal-head p { margin: 7px 0 0; color: var(--text-dim); font-size: 13px; }
+.avatar-modal-close { width: 36px; height: 36px; flex: 0 0 36px; border: 1px solid var(--border); border-radius: 50%; background: #fff; color: var(--text-dim); font-size: 24px; line-height: 1; cursor: pointer; }
+.avatar-gallery { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin: 0; padding: 0; border: 0; }
+.avatar-option { position: relative; display: flex; min-width: 0; flex-direction: column; align-items: center; gap: 10px; padding: 16px 12px; border: 1px solid var(--border); border-radius: 13px; background: #FBFAFE; color: var(--text-dim); font-size: 13px; cursor: pointer; transition: border-color .15s ease, background .15s ease, transform .15s ease; }
+.avatar-option:hover { transform: translateY(-2px); border-color: #B9AFE9; }
+.avatar-option:focus-within { outline: 2px solid var(--violet); outline-offset: 2px; }
+.avatar-option:has(input:checked) { border-color: var(--violet); background: #F5F2FF; color: var(--text); box-shadow: 0 0 0 2px rgba(91, 61, 245, .12); }
+.avatar-option input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.avatar-option-image { display: block; width: 132px; height: 132px; max-width: 100%; overflow: hidden; border-radius: 50%; background: #EFEBFE; }
+.avatar-option-image img { width: 100%; height: 100%; object-fit: cover; }
+.avatar-option-name { overflow-wrap: anywhere; font-weight: 600; text-align: center; }
+.avatar-modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 24px; padding-top: 18px; border-top: 1px solid var(--border); }
+.visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
 .logout-card { display: flex; align-items: center; justify-content: space-between; gap: 20px; max-width: 760px; margin-top: 20px; padding: 22px 26px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); }
 .logout-card h2 { margin-bottom: 5px; }
 .logout-card p { margin: 0; }
@@ -149,9 +178,22 @@ h1, h2, .brand { font-family: 'Sora', sans-serif; }
     .page, .form-page { padding: 30px 20px 50px; }
     .page-head { align-items: flex-start; flex-direction: column; }
     .project-form { padding: 26px 22px; }
+    .avatar-gallery { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .logout-card { align-items: flex-start; flex-direction: column; padding: 22px; }
     .dashboard { padding: 30px 20px 50px; }
     .dashboard-head { align-items: flex-start; flex-direction: column; }
     .summary-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .project-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 420px) {
+    .current-avatar { flex-wrap: wrap; }
+    .current-avatar .btn-ghost { width: 100%; }
+    .avatar-modal-backdrop { padding: 12px; }
+    .avatar-modal { padding: 20px 16px; }
+    .avatar-gallery { gap: 9px; }
+    .avatar-option { padding: 10px 6px; }
+    .avatar-option-image { width: 96px; height: 96px; }
+    .avatar-modal-actions { flex-direction: column-reverse; }
+    .avatar-modal-actions > button { width: 100%; }
 }
