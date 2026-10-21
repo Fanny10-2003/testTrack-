@@ -33,7 +33,7 @@ public class Usuario {
     private String correo;
 
     @NotBlank
-    @Column(name = "password_hash", nullable = false, length = 100)
+    @Column(name = "password_hash", nullable = false, length = 500)
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
     private String contrasena;
