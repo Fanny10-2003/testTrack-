@@ -27,12 +27,11 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class IncidenciaRestController {
 
-    private final IIncidenciaService prodServ;
-
+    private final IIncidenciaService incidenciaService;
 
     @GetMapping
     public List<IncidenciaDTO> traerIncidencias() {
-        return prodServ.traerIncidencias().stream()
+        return incidenciaService.traerIncidencias().stream()
                 .map(IncidenciaDTO::fromEntity)
                 .collect(Collectors.toList());
     }
@@ -40,7 +39,7 @@ public class IncidenciaRestController {
     @GetMapping("/{codIncidencia}")
     public ResponseEntity<IncidenciaDTO> buscarIncidencia(@PathVariable Long codIncidencia) {
         try {
-            return ResponseEntity.ok(IncidenciaDTO.fromEntity(prodServ.buscarIncidencia(codIncidencia)));
+            return ResponseEntity.ok(IncidenciaDTO.fromEntity(incidenciaService.buscarIncidencia(codIncidencia)));
         } catch (EntityNotFoundException ex) {
             return ResponseEntity.notFound().build();
         }
@@ -49,7 +48,7 @@ public class IncidenciaRestController {
     @PostMapping
     public ResponseEntity<?> crearIncidencia(@Valid @RequestBody IncidenciaDTO incidencia) {
         try {
-            Incidencia incidenciaCreada = prodServ.crearIncidencia(incidencia.toEntity(),
+            Incidencia incidenciaCreada = incidenciaService.crearIncidencia(incidencia.toEntity(),
                     incidencia.getProyectoId(), incidencia.getUsuarioId());
             return ResponseEntity.status(HttpStatus.CREATED).body(IncidenciaDTO.fromEntity(incidenciaCreada));
         } catch (IllegalArgumentException ex) {
@@ -62,7 +61,7 @@ public class IncidenciaRestController {
             @PathVariable Long codIncidencia,
             @Valid @RequestBody IncidenciaDTO incidencia) {
         try {
-            Incidencia actualizada = prodServ.editarIncidencia(codIncidencia, incidencia.toEntity(),
+            Incidencia actualizada = incidenciaService.editarIncidencia(codIncidencia, incidencia.toEntity(),
                     incidencia.getProyectoId(), incidencia.getUsuarioId());
             return ResponseEntity.ok(IncidenciaDTO.fromEntity(actualizada));
         } catch (EntityNotFoundException ex) {
@@ -76,7 +75,7 @@ public class IncidenciaRestController {
     public ResponseEntity<?> cambiarEstado(@PathVariable Long codIncidencia,
                                           @RequestParam EstadoIncidencia estado) {
         try {
-            return ResponseEntity.ok(prodServ.cambiarEstado(codIncidencia, estado));
+            return ResponseEntity.ok(incidenciaService.cambiarEstado(codIncidencia, estado));
         } catch (EntityNotFoundException ex) {
             return ResponseEntity.notFound().build();
         } catch (IllegalStateException ex) {

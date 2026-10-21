@@ -1,7 +1,7 @@
 package com.TestTrackQA.testTrack.controller;
 
 import com.TestTrackQA.testTrack.DTO.ProyectoDTO;
-import com.TestTrackQA.testTrack.service.ProyectoService;
+import com.TestTrackQA.testTrack.service.IProyectoService;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -24,7 +24,7 @@ import java.util.Locale;
 @RequiredArgsConstructor
 public class ProyectoController {
 
-    private final ProyectoService proyectoService;
+    private final IProyectoService proyectoService;
 
     @GetMapping
     public String listar(Authentication authentication, HttpSession session, Model model) {

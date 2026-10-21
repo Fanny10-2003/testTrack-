@@ -9,6 +9,7 @@ public interface IIncidenciaService {
 
     List<Incidencia> traerIncidencias();
     List<Incidencia> traerIncidenciasPorProyecto(Long proyectoId);
+    List<Incidencia> traerIncidenciasPorProyectos(List<Long> proyectoIds);
     Incidencia crearIncidencia(Incidencia incidencia, Long proyectoId, Long usuarioId);
     Incidencia buscarIncidencia (Long codIncidencia);
     Incidencia buscarIncidenciaEnProyecto(Long codIncidencia, Long proyectoId);

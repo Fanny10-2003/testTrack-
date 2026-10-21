@@ -1,7 +1,8 @@
 package com.TestTrackQA.testTrack.config;
 
 import com.TestTrackQA.testTrack.model.Usuario;
-import com.TestTrackQA.testTrack.repository.IUsuarioRepository;
+import com.TestTrackQA.testTrack.service.IUsuarioService;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -25,10 +26,14 @@ public class SecurityConfig {
     }
 
     @Bean
-    public UserDetailsService userDetailsService(IUsuarioRepository usuarioRepository) {
+    public UserDetailsService userDetailsService(IUsuarioService usuarioService) {
         return correo -> {
-            Usuario usuario = usuarioRepository.findByCorreoIgnoreCase(correo.trim())
-                    .orElseThrow(() -> new UsernameNotFoundException("Credenciales inválidas"));
+            Usuario usuario;
+            try {
+                usuario = usuarioService.buscarPorCorreo(correo.trim());
+            } catch (EntityNotFoundException ex) {
+                throw new UsernameNotFoundException("Credenciales inválidas", ex);
+            }
 
             String rol = usuario.getRol().trim().toUpperCase(Locale.ROOT);
             if (!rol.startsWith("ROLE_")) {

@@ -9,11 +9,13 @@ import com.TestTrackQA.testTrack.repository.IProyectoRepository;
 import com.TestTrackQA.testTrack.repository.IUsuarioRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.hibernate.Hibernate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -26,13 +28,28 @@ public class IncidenciaService implements IIncidenciaService {
     @Override
     @Transactional(readOnly = true)
     public List<Incidencia> traerIncidencias() {
-        return incidenciaRepository.findAllWithProyectoAndUsuario();
+        List<Incidencia> incidencias = incidenciaRepository.findAll();
+        incidencias.forEach(this::inicializarRelaciones);
+        return incidencias;
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<Incidencia> traerIncidenciasPorProyecto(Long proyectoId) {
-        return incidenciaRepository.findAllByProyecto_IdProyecto(proyectoId);
+        return incidenciaRepository.findAll().stream()
+                .filter(incidencia -> incidencia.getProyecto().getIdProyecto().equals(proyectoId))
+                .peek(this::inicializarRelaciones)
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Incidencia> traerIncidenciasPorProyectos(List<Long> proyectoIds) {
+        Set<Long> ids = Set.copyOf(proyectoIds);
+        return incidenciaRepository.findAll().stream()
+                .filter(incidencia -> ids.contains(incidencia.getProyecto().getIdProyecto()))
+                .peek(this::inicializarRelaciones)
+                .toList();
     }
 
     @Override
@@ -54,17 +71,24 @@ public class IncidenciaService implements IIncidenciaService {
     @Override
     @Transactional(readOnly = true)
     public Incidencia buscarIncidencia(Long codIncidencia) {
-        return incidenciaRepository.findWithProyectoAndUsuarioById(codIncidencia)
+        Incidencia incidencia = incidenciaRepository.findById(codIncidencia)
                 .orElseThrow(() -> new EntityNotFoundException(
                         "No se encontró la incidencia con ID " + codIncidencia));
+        inicializarRelaciones(incidencia);
+        return incidencia;
     }
 
     @Override
     @Transactional(readOnly = true)
     public Incidencia buscarIncidenciaEnProyecto(Long codIncidencia, Long proyectoId) {
-        return incidenciaRepository.findByIdIncidenciaAndProyecto_IdProyecto(codIncidencia, proyectoId)
+        Incidencia incidencia = incidenciaRepository.findById(codIncidencia)
                 .orElseThrow(() -> new EntityNotFoundException(
                         "No se encontró la incidencia en el proyecto activo"));
+        if (!incidencia.getProyecto().getIdProyecto().equals(proyectoId)) {
+            throw new EntityNotFoundException("No se encontró la incidencia en el proyecto activo");
+        }
+        inicializarRelaciones(incidencia);
+        return incidencia;
     }
 
     @Override
@@ -125,6 +149,11 @@ public class IncidenciaService implements IIncidenciaService {
         destino.setSeveridad(origen.getSeveridad());
         destino.setComentario(origen.getComentario());
         destino.setEvidencia(origen.getEvidencia());
+    }
+
+    private void inicializarRelaciones(Incidencia incidencia) {
+        Hibernate.initialize(incidencia.getProyecto());
+        Hibernate.initialize(incidencia.getUsuario());
     }
 
     private void validarTransicion(Incidencia incidencia, EstadoIncidencia nuevoEstado) {

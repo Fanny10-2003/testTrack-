@@ -39,4 +39,9 @@ public class Proyecto {
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
     private List<Incidencia> incidencias = new ArrayList<>();
+
+    @OneToMany(mappedBy = "proyecto", fetch = FetchType.LAZY)
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    private List<MiembroProyecto> miembros = new ArrayList<>();
 }

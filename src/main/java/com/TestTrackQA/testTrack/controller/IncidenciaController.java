@@ -5,9 +5,9 @@ import com.TestTrackQA.testTrack.DTO.ProyectoDTO;
 import com.TestTrackQA.testTrack.model.EstadoIncidencia;
 import com.TestTrackQA.testTrack.model.Incidencia;
 import com.TestTrackQA.testTrack.model.Usuario;
-import com.TestTrackQA.testTrack.repository.IUsuarioRepository;
 import com.TestTrackQA.testTrack.service.IIncidenciaService;
-import com.TestTrackQA.testTrack.service.ProyectoService;
+import com.TestTrackQA.testTrack.service.IProyectoService;
+import com.TestTrackQA.testTrack.service.IUsuarioService;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
@@ -30,8 +30,8 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 public class IncidenciaController {
 
     private final IIncidenciaService incidenciaService;
-    private final ProyectoService proyectoService;
-    private final IUsuarioRepository usuarioRepository;
+    private final IProyectoService proyectoService;
+    private final IUsuarioService usuarioService;
 
     @GetMapping
     public String listar(Authentication authentication, HttpSession session, Model model,
@@ -170,7 +170,6 @@ public class IncidenciaController {
     }
 
     private Usuario buscarUsuarioAutenticado(Authentication authentication) {
-        return usuarioRepository.findByCorreoIgnoreCase(authentication.getName())
-                .orElseThrow(() -> new EntityNotFoundException("No se encontró el usuario autenticado"));
+        return usuarioService.buscarPorCorreo(authentication.getName());
     }
 }

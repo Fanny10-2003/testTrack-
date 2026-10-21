@@ -5,9 +5,10 @@ import com.TestTrackQA.testTrack.model.Proyecto;
 import com.TestTrackQA.testTrack.model.Usuario;
 import com.TestTrackQA.testTrack.model.Incidencia;
 import com.TestTrackQA.testTrack.model.EstadoIncidencia;
-import com.TestTrackQA.testTrack.repository.IIncidenciaRepository;
+import com.TestTrackQA.testTrack.model.MiembroProyecto;
+import com.TestTrackQA.testTrack.model.RolProyecto;
+import com.TestTrackQA.testTrack.repository.IMiembroProyectoRepository;
 import com.TestTrackQA.testTrack.repository.IProyectoRepository;
-import com.TestTrackQA.testTrack.repository.IUsuarioRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -21,12 +22,14 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-public class ProyectoService {
+public class ProyectoService implements IProyectoService {
 
     private final IProyectoRepository proyectoRepository;
-    private final IUsuarioRepository usuarioRepository;
-    private final IIncidenciaRepository incidenciaRepository;
+    private final IMiembroProyectoRepository miembroProyectoRepository;
+    private final IUsuarioService usuarioService;
+    private final IIncidenciaService incidenciaService;
 
+    @Override
     @Transactional(readOnly = true)
     public List<ProyectoDTO> listarDelAdministrador(String correo) {
         List<Proyecto> proyectos = proyectoRepository.findAllByAdministrador_CorreoIgnoreCaseAndEliminadoFalse(correo);
@@ -39,7 +42,7 @@ public class ProyectoService {
                 .peek(dto -> dto.setRolUsuario("Administrador"))
                 .collect(Collectors.toMap(ProyectoDTO::getIdProyecto, Function.identity()));
         List<Long> idsProyecto = proyectosPorId.keySet().stream().toList();
-        List<Incidencia> incidencias = incidenciaRepository.findAllByProyecto_IdProyectoIn(idsProyecto);
+        List<Incidencia> incidencias = incidenciaService.traerIncidenciasPorProyectos(idsProyecto);
 
         incidencias.forEach(incidencia -> {
             ProyectoDTO resumen = proyectosPorId.get(incidencia.getProyecto().getIdProyecto());
@@ -62,16 +65,16 @@ public class ProyectoService {
                 .toList();
     }
 
+    @Override
     @Transactional(readOnly = true)
     public String nombreAdministrador(String correo) {
-        return usuarioRepository.findByCorreoIgnoreCase(correo)
-                .map(Usuario::getNombre)
-                .orElse(correo);
+        return usuarioService.nombrePorCorreo(correo);
     }
 
+    @Override
     @Transactional
     public Long crear(ProyectoDTO datos, String correoAdministrador) {
-        Usuario administrador = buscarAdministrador(correoAdministrador);
+        var administrador = buscarAdministrador(correoAdministrador);
         Proyecto proyecto = new Proyecto();
         proyecto.setNombre(datos.getNombre().trim());
         proyecto.setDescripcion(datos.getDescripcion());
@@ -79,14 +82,24 @@ public class ProyectoService {
         proyecto.setAdministrador(administrador);
         proyecto.setFecha_creacion(LocalDateTime.now());
         proyecto.setEliminado(false);
-        return proyectoRepository.save(proyecto).getIdProyecto();
+        Proyecto proyectoGuardado = proyectoRepository.save(proyecto);
+
+        MiembroProyecto miembroAdministrador = new MiembroProyecto();
+        miembroAdministrador.setUsuario(administrador);
+        miembroAdministrador.setProyecto(proyectoGuardado);
+        miembroAdministrador.setRol(RolProyecto.ADMINISTRADOR);
+        miembroProyectoRepository.save(miembroAdministrador);
+
+        return proyectoGuardado.getIdProyecto();
     }
 
+    @Override
     @Transactional(readOnly = true)
     public ProyectoDTO buscarPropio(Long idProyecto, String correoAdministrador) {
         return ProyectoDTO.fromEntity(buscarProyectoPropio(idProyecto, correoAdministrador));
     }
 
+    @Override
     @Transactional
     public void editar(Long idProyecto, ProyectoDTO datos, String correoAdministrador) {
         Proyecto proyecto = buscarProyectoPropio(idProyecto, correoAdministrador);
@@ -96,6 +109,7 @@ public class ProyectoService {
         proyecto.setFecha_modificacion(LocalDateTime.now());
     }
 
+    @Override
     @Transactional
     public void eliminar(Long idProyecto, String correoAdministrador) {
         Proyecto proyecto = buscarProyectoPropio(idProyecto, correoAdministrador);
@@ -104,8 +118,7 @@ public class ProyectoService {
     }
 
     private Usuario buscarAdministrador(String correo) {
-        return usuarioRepository.findByCorreoIgnoreCase(correo)
-                .orElseThrow(() -> new EntityNotFoundException("No se encontró el usuario autenticado"));
+        return usuarioService.buscarPorCorreo(correo);
     }
 
     private Proyecto buscarProyectoPropio(Long idProyecto, String correoAdministrador) {

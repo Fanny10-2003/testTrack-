@@ -2,7 +2,7 @@ package com.TestTrackQA.testTrack.controller;
 
 import com.TestTrackQA.testTrack.DTO.RegistroUsuarioDTO;
 import com.TestTrackQA.testTrack.model.Usuario;
-import com.TestTrackQA.testTrack.repository.IUsuarioRepository;
+import com.TestTrackQA.testTrack.service.IUsuarioService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -20,7 +20,7 @@ import java.util.Locale;
 @RequiredArgsConstructor
 public class AuthController {
 
-    private final IUsuarioRepository usuarioRepository;
+    private final IUsuarioService usuarioService;
     private final PasswordEncoder passwordEncoder;
 
     @GetMapping("/login")
@@ -49,7 +49,7 @@ public class AuthController {
                 ? ""
                 : registro.getCorreo().trim().toLowerCase(Locale.ROOT);
         if (!correoNormalizado.isBlank()
-                && usuarioRepository.existsByCorreoIgnoreCase(correoNormalizado)) {
+                && usuarioService.existePorCorreo(correoNormalizado)) {
             bindingResult.rejectValue("correo", "correo.duplicado",
                     "Ya existe una cuenta con ese correo");
         }
@@ -64,7 +64,7 @@ public class AuthController {
         usuario.setContrasena(passwordEncoder.encode(registro.getContrasena()));
         usuario.setRol("ADMINISTRADOR");
         usuario.setFechaCreacion(LocalDateTime.now());
-        usuarioRepository.save(usuario);
+        usuarioService.guardar(usuario);
 
         return "redirect:/login?registrado";
     }
