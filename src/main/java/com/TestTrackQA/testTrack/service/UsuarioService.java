@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -23,6 +24,16 @@ public class UsuarioService implements IUsuarioService {
             "Gato siete.png",
             "Gato ocho.png",
             "Gato nueve.png");
+    private static final Map<String, String> NOMBRES_FOTOS_PERFIL = Map.of(
+            "Gato uno.png", "Michi commit",
+            "Gato dos.png", "El gato de incógnito",
+            "Gato tres.png", "Bigotes y café: depuración fina",
+            "Gato cuatro.png", "Michi en modo concentración",
+            "Gato cinco.png", "Tabby full-stack",
+            "Gato seis.png", "Inspector Bigotes QA",
+            "Gato siete.png", "Sombra del código",
+            "Gato ocho.png", "Bug bajo vigilancia",
+            "Gato nueve.png", "Arquitecto ronroneante");
 
     private final IUsuarioRepository usuarioRepository;
 
@@ -50,6 +61,11 @@ public class UsuarioService implements IUsuarioService {
     @Override
     public List<String> fotosPerfilDisponibles() {
         return FOTOS_PERFIL;
+    }
+
+    @Override
+    public Map<String, String> nombresFotosPerfil() {
+        return NOMBRES_FOTOS_PERFIL;
     }
 
     @Override

@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf.token}">
+    <meta name="_csrf_header" th:content="${_csrf.headerName}">
     <title>TestTrack QA — Incidencias</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -19,7 +21,8 @@
     <form th:action="@{/logout}" method="post">
         <button class="action-button" type="submit">Cerrar sesión</button>
     </form>
-    <a class="primary-button" th:href="@{/incidencias/nuevo}">+ Nueva incidencia</a>
+    <a class="primary-button" th:if="${rolProyecto.name() == 'QA' or rolProyecto.name() == 'ADMINISTRADOR'}"
+       th:href="@{/incidencias/nuevo}">+ Nueva incidencia</a>
 </header>
 
 <main class="content">
@@ -60,6 +63,7 @@
                     <th scope="col">Incidencia</th>
                     <th scope="col">Severidad</th>
                     <th scope="col">Estado</th>
+                    <th scope="col">Asignado a</th>
                     <th scope="col">Fecha</th>
                     <th scope="col">Acciones</th>
                 </tr>
@@ -75,8 +79,6 @@
                              th:text="${'Proyecto: ' + incidencia.proyecto.nombre}">Proyecto</div>
                         <div class="module" th:if="${incidencia.usuario != null}"
                              th:text="${'Reportado por: ' + incidencia.usuario.nombre}">Reportado por</div>
-                        <div class="module" th:if="${incidencia.desarrolladorAsignado != null}"
-                             th:text="${'Asignado a: ' + incidencia.desarrolladorAsignado.nombre}">Asignado a</div>
                     </td>
                     <td>
                         <span class="severity"
@@ -84,9 +86,45 @@
                               th:text="${incidencia.severidad}">MEDIA</span>
                     </td>
                     <td>
-                        <span class="status"
+                        <span class="status visually-hidden"
                               th:classappend="${incidencia.estado.name() == 'ABIERTO' ? ' status-abierto' : (incidencia.estado.name() == 'CERRADO' ? ' status-cerrado' : ' status-progreso')}"
                               th:text="${incidencia.estado.name()}">ABIERTO</span>
+                        <div class="state-control table-control">
+                            <label>
+                                <span class="visually-hidden">Cambiar estado</span>
+                                <select class="table-select"
+                                        th:attr="data-url=@{/api/incidencias/{id}/estado(id=${incidencia.idIncidencia})},data-project-id=${proyectoActivo.idProyecto},data-original=${incidencia.estado.name()}"
+                                        onchange="cambiarEstadoIncidencia(this)">
+                                    <option value="ABIERTO" th:selected="${incidencia.estado.name() == 'ABIERTO'}">Abierto</option>
+                                    <option value="CERRADO" th:selected="${incidencia.estado.name() == 'CERRADO'}">Cerrado</option>
+                                    <option value="EN_PROGRESO" th:selected="${incidencia.estado.name() == 'EN_PROGRESO'}">En progreso</option>
+                                    <option value="RESUELTO" th:selected="${incidencia.estado.name() == 'RESUELTO'}">Resuelto</option>
+                                </select>
+                            </label>
+                            <span class="assignment-feedback" aria-live="polite"></span>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="assignment-control table-control">
+                            <label>
+                                <span class="visually-hidden"
+                                      th:text="${'Asignar ' + incidencia.codigoIncidencia}">Asignar incidencia</span>
+                                <select class="assignment-select"
+                                        th:attr="data-url=@{/api/incidencias/{id}/asignar(id=${incidencia.idIncidencia})},data-original=${incidencia.desarrolladorAsignado != null ? incidencia.desarrolladorAsignado.idUsuario : ''}"
+                                        th:disabled="${rolProyecto.name() != 'ADMINISTRADOR' and (rolProyecto.name() != 'DESARROLLADOR' or (incidencia.desarrolladorAsignado != null and !incidencia.desarrolladorAsignado.correo.equalsIgnoreCase(correoUsuario)))}"
+                                        onchange="asignarIncidencia(this)">
+                                    <option value="">Sin asignar</option>
+                                    <option th:each="miembro : ${miembrosProyecto}"
+                                            th:value="${miembro.usuario.idUsuario}"
+                                            th:text="${miembro.usuario.nombre}"
+                                            th:disabled="${miembro.rol.name() == 'QA' or (rolProyecto.name() != 'ADMINISTRADOR' and !miembro.usuario.correo.equalsIgnoreCase(correoUsuario))}"
+                                            th:selected="${incidencia.desarrolladorAsignado != null and incidencia.desarrolladorAsignado.idUsuario == miembro.usuario.idUsuario}">
+                                        Miembro
+                                    </option>
+                                </select>
+                            </label>
+                            <span class="assignment-feedback" aria-live="polite"></span>
+                        </div>
                     </td>
                     <td class="date">
                         <time th:attr="datetime=${incidencia.fechaCreacion},data-date=${incidencia.fechaCreacion}"
@@ -95,28 +133,14 @@
                     <td>
                         <div class="actions">
                             <a class="action-link" th:href="@{/incidencias/{id}(id=${incidencia.idIncidencia})}">Ver</a>
-                            <form th:if="${incidencia.desarrolladorAsignado == null and (incidencia.estado.name() == 'ABIERTO' or incidencia.estado.name() == 'EN_PROGRESO')}"
-                                  th:action="@{/incidencias/{id}/tomar(id=${incidencia.idIncidencia})}" method="post">
-                                <button class="action-button" type="submit">Tomar</button>
-                            </form>
-                            <form th:if="${incidencia.desarrolladorAsignado != null and incidencia.desarrolladorAsignado.correo.equalsIgnoreCase(correoUsuario)}"
-                                  th:action="@{/incidencias/{id}/liberar(id=${incidencia.idIncidencia})}" method="post">
-                                <button class="action-button" type="submit">Liberar</button>
-                            </form>
-                            <form th:action="@{/incidencias/{id}/estado(id=${incidencia.idIncidencia})}" method="post">
-                                <input type="hidden" name="estado"
-                                       th:value="${incidencia.estado.name() == 'ABIERTO' ? 'CERRADO' : (incidencia.estado.name() == 'CERRADO' ? 'ABIERTO' : (incidencia.estado.name() == 'EN_PROGRESO' ? 'RESUELTO' : 'EN_PROGRESO'))}">
-                                <button class="action-button" type="submit"
-                                        th:text="${incidencia.estado.name() == 'ABIERTO' ? 'Cerrar' : (incidencia.estado.name() == 'CERRADO' ? 'Reabrir' : (incidencia.estado.name() == 'EN_PROGRESO' ? 'Resolver' : 'Reabrir progreso'))}">Cerrar</button>
-                            </form>
                         </div>
                     </td>
                 </tr>
                 <tr id="empty-state" th:if="${#lists.isEmpty(incidencias)}">
-                    <td class="empty-state" colspan="6">No hay incidencias registradas. Crea una para comenzar.</td>
+                    <td class="empty-state" colspan="7">No hay incidencias registradas. Crea una para comenzar.</td>
                 </tr>
                 <tr id="no-results" hidden>
-                    <td class="empty-state" colspan="6">No se encontraron incidencias con esos filtros.</td>
+                    <td class="empty-state" colspan="7">No se encontraron incidencias con esos filtros.</td>
                 </tr>
                 </tbody>
             </table>

@@ -154,6 +154,7 @@ public class PerfilController {
         model.addAttribute("iniciales", iniciales(nombreUsuario));
         model.addAttribute("fotoPerfil", perfil.getFotoPerfil());
         model.addAttribute("fotosPerfil", usuarioService.fotosPerfilDisponibles());
+        model.addAttribute("nombresFotosPerfil", usuarioService.nombresFotosPerfil());
     }
 
     private boolean estaVacio(String valor) {

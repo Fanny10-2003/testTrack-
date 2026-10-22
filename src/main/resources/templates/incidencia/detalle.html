@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf.token}">
+    <meta name="_csrf_header" th:content="${_csrf.headerName}">
     <title th:text="${incidencia.codigoIncidencia + ' — TestTrack QA'}">Detalle de incidencia — TestTrack QA</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -127,7 +129,49 @@
                 </section>
             </div>
         </div>
+        <section class="conversation-section" th:attr="data-incidencia-id=${incidencia.idIncidencia}">
+            <div class="section-heading">
+                <span class="section-icon" aria-hidden="true">☷</span>
+                <h2>Conversación</h2>
+            </div>
+            <ol class="conversation-list" id="conversation-list" aria-live="polite">
+                <li class="conversation-entry" th:each="comentario : ${comentarios}">
+                    <div class="conversation-meta">
+                        <strong th:text="${comentario.usuarioNombre}">Usuario</strong>
+                        <time th:datetime="${comentario.fechaCreacion}"
+                              th:text="${#temporals.format(comentario.fechaCreacion, 'dd/MM/yyyy HH:mm')}">Fecha</time>
+                    </div>
+                    <p class="preserve-lines" th:text="${comentario.contenido}">Comentario</p>
+                </li>
+                <li class="conversation-empty" id="conversation-empty" th:if="${comentarios.isEmpty()}">
+                    Todavía no hay mensajes en la conversación.
+                </li>
+            </ol>
+            <form class="conversation-form" id="conversation-form">
+                <label for="conversation-content">Añadir comentario</label>
+                <textarea id="conversation-content" name="contenido" rows="3" maxlength="10000"
+                          placeholder="Escribe un mensaje..." required></textarea>
+                <div class="conversation-form-footer">
+                    <span class="conversation-feedback" id="conversation-feedback" role="status"></span>
+                    <button class="btn-primary" type="submit">Enviar comentario</button>
+                </div>
+            </form>
+        </section>
+        <section class="history-section" aria-labelledby="history-title">
+            <div class="section-heading">
+                <span class="section-icon" aria-hidden="true">↺</span>
+                <h2 id="history-title">Historial de cambios</h2>
+            </div>
+            <ol class="history-list" th:if="${!historial.isEmpty()}">
+                <li class="history-entry" th:each="evento : ${historial}">
+                    <p th:text="${evento.mensaje}">Tiffany cambió el estado de Abierto a En progreso</p>
+                    <time th:datetime="${evento.fecha}" th:text="${evento.tiempoRelativo}">hace 2 horas</time>
+                </li>
+            </ol>
+            <p class="history-empty" th:if="${historial.isEmpty()}">Todavía no hay cambios registrados.</p>
+        </section>
     </article>
 </main>
+<script th:src="@{/incidencia/detalle.js}" defer></script>
 </body>
 </html>

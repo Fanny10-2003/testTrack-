@@ -9,6 +9,13 @@ import java.util.Optional;
 
 public interface IMiembroProyectoRepository extends JpaRepository<MiembroProyecto, Long> {
 
+    @EntityGraph(attributePaths = {"usuario"})
+    List<MiembroProyecto> findAllByProyecto_IdProyectoAndProyecto_EliminadoFalse(Long idProyecto);
+
+    @EntityGraph(attributePaths = {"usuario"})
+    Optional<MiembroProyecto> findByUsuario_IdUsuarioAndProyecto_IdProyectoAndProyecto_EliminadoFalse(
+            Long usuarioId, Long proyectoId);
+
     @EntityGraph(attributePaths = {"proyecto", "proyecto.administrador"})
     List<MiembroProyecto> findAllByUsuario_CorreoIgnoreCaseAndProyecto_EliminadoFalse(String correo);
 

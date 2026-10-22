@@ -167,13 +167,36 @@ thead th {
     white-space: nowrap;
 }
 
+thead th:nth-child(3),
+thead th:nth-child(4),
+thead th:nth-child(5),
+thead th:nth-child(6),
+thead th:nth-child(7) {
+    text-align: center;
+}
+
 tbody td {
-    padding: 15px 18px;
+    padding: 18px 18px;
     border-bottom: 1px solid var(--border);
     font-size: 14px;
     vertical-align: middle;
 }
 
+tbody td:nth-child(3),
+tbody td:nth-child(4),
+tbody td:nth-child(5),
+tbody td:nth-child(6),
+tbody td:nth-child(7) {
+    text-align: center;
+}
+
+tbody td:nth-child(4) .table-control,
+tbody td:nth-child(5) .table-control,
+tbody td:nth-child(7) .actions {
+    justify-content: center;
+}
+
+tbody tr { height: 104px; }
 tbody tr:last-child td { border-bottom: 0; }
 tbody tr:hover td { background: #FBFAFE; }
 .code { color: var(--violet); font-size: 13px; font-weight: 700; white-space: nowrap; }
@@ -203,6 +226,34 @@ tbody tr:hover td { background: #FBFAFE; }
 
 .status-abierto { background: #FDE8EE; color: var(--critica); }
 .status-cerrado { background: #E7F7F0; color: var(--baja); }
+.table-select,
+.assignment-select {
+    width: 170px;
+    padding: 8px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: #FBFAFE;
+    color: var(--text);
+    font: 13px 'IBM Plex Sans', sans-serif;
+}
+.table-control {
+    position: relative;
+    display: flex;
+    min-height: 40px;
+    align-items: center;
+}
+.table-control label { display: block; }
+.assignment-select:disabled { opacity: .65; cursor: not-allowed; }
+.assignment-select.assignment-saved { border-color: var(--baja); }
+.assignment-feedback {
+    position: absolute;
+    top: calc(100% + 2px);
+    left: 0;
+    font-size: 11px;
+    white-space: nowrap;
+}
+.assignment-success { color: var(--baja); }
+.assignment-error { color: var(--critica); }
 .date { color: var(--text-dim); font-size: 13px; white-space: nowrap; }
 .actions { display: flex; align-items: center; gap: 12px; white-space: nowrap; }
 .action-link, .action-button { padding: 0; border: 0; background: none; color: var(--violet); font: 600 13px 'IBM Plex Sans', sans-serif; text-decoration: none; cursor: pointer; }

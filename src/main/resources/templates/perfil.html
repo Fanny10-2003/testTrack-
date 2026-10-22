@@ -54,7 +54,7 @@
                 <div class="current-avatar-info">
                     <strong>Foto de perfil</strong>
                     <span id="current-avatar-name"
-                          th:text="${fotoPerfil != null ? #strings.replace(fotoPerfil, '.png', '') : 'Sin foto seleccionada'}">
+                          th:text="${fotoPerfil != null ? nombresFotosPerfil[fotoPerfil] : 'Sin foto seleccionada'}">
                         Sin foto seleccionada
                     </span>
                 </div>
@@ -137,9 +137,9 @@
                        th:id="${'fotoPerfil-opcion-' + iter.index}">
                 <span class="avatar-option-image">
                     <img th:src="@{/images/logo/fotoPerfil/{archivo}(archivo=${foto})}"
-                         th:alt="${'Foto de perfil ' + (iter.index + 1)}">
+                         th:alt="${nombresFotosPerfil[foto]}">
                 </span>
-                <span class="avatar-option-name" th:text="${#strings.replace(foto, '.png', '')}">Gato</span>
+                <span class="avatar-option-name" th:text="${nombresFotosPerfil[foto]}">Michi commit</span>
             </label>
         </fieldset>
         <footer class="avatar-modal-actions">

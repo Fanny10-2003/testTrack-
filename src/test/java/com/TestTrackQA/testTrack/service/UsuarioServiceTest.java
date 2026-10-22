@@ -8,6 +8,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.verifyNoInteractions;
 
@@ -27,5 +28,12 @@ class UsuarioServiceTest {
         assertFalse(usuarioService.fotoPerfilPermitida("../Logo.png"));
         assertFalse(usuarioService.fotoPerfilPermitida("avatar-externo.png"));
         verifyNoInteractions(usuarioRepository);
+    }
+
+    @Test
+    void proporcionaNombresCreativosParaCadaFotoDisponible() {
+        assertEquals(9, usuarioService.nombresFotosPerfil().size());
+        assertEquals("Inspector Bigotes QA", usuarioService.nombresFotosPerfil().get("Gato seis.png"));
+        assertEquals("Bug bajo vigilancia", usuarioService.nombresFotosPerfil().get("Gato ocho.png"));
     }
 }

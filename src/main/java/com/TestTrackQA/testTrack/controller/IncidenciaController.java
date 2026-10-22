@@ -38,6 +38,10 @@ public class IncidenciaController {
             ProyectoDTO proyectoActivo = obtenerProyectoActivo(authentication, session);
             model.addAttribute("proyectoActivo", proyectoActivo);
             model.addAttribute("correoUsuario", authentication.getName());
+            model.addAttribute("rolProyecto", incidenciaService.obtenerRolUsuarioEnProyecto(
+                    authentication.getName(), proyectoActivo.getIdProyecto()));
+            model.addAttribute("miembrosProyecto",
+                    incidenciaService.traerMiembrosDelProyecto(proyectoActivo.getIdProyecto()));
             model.addAttribute("incidencias",
                     incidenciaService.traerIncidenciasPorProyecto(proyectoActivo.getIdProyecto()));
             return "incidencia/listaIncidencia";
@@ -106,6 +110,10 @@ public class IncidenciaController {
                     codIncidencia, proyectoActivo.getIdProyecto());
             model.addAttribute("incidencia", incidencia);
             model.addAttribute("proyectoActivo", proyectoActivo);
+            model.addAttribute("historial",
+                    incidenciaService.traerHistorial(codIncidencia, authentication.getName()));
+            model.addAttribute("comentarios",
+                    incidenciaService.traerComentarios(codIncidencia, authentication.getName()));
             return "incidencia/detalle";
         } catch (EntityNotFoundException ex) {
             redirectAttributes.addFlashAttribute("error", "No se encontró la incidencia en el proyecto activo.");
@@ -182,30 +190,6 @@ public class IncidenciaController {
             ProyectoDTO proyectoActivo = obtenerProyectoActivo(authentication, session);
             incidenciaService.cambiarEstadoEnProyecto(
                     codIncidencia, proyectoActivo.getIdProyecto(), estado, authentication.getName());
-        } catch (EntityNotFoundException | IllegalStateException | AccessDeniedException ex) {
-            redirectAttributes.addFlashAttribute("error", ex.getMessage());
-        }
-        return "redirect:/incidencias";
-    }
-
-    @PostMapping("/{codIncidencia}/tomar")
-    public String tomarIncidencia(@PathVariable Long codIncidencia,
-                                  Authentication authentication,
-                                  RedirectAttributes redirectAttributes) {
-        try {
-            incidenciaService.tomarIncidencia(codIncidencia, authentication.getName());
-        } catch (EntityNotFoundException | IllegalStateException | AccessDeniedException ex) {
-            redirectAttributes.addFlashAttribute("error", ex.getMessage());
-        }
-        return "redirect:/incidencias";
-    }
-
-    @PostMapping("/{codIncidencia}/liberar")
-    public String liberarIncidencia(@PathVariable Long codIncidencia,
-                                    Authentication authentication,
-                                    RedirectAttributes redirectAttributes) {
-        try {
-            incidenciaService.liberarIncidencia(codIncidencia, authentication.getName());
         } catch (EntityNotFoundException | IllegalStateException | AccessDeniedException ex) {
             redirectAttributes.addFlashAttribute("error", ex.getMessage());
         }

@@ -1,11 +1,13 @@
 package com.TestTrackQA.testTrack.restController;
 
 import com.TestTrackQA.testTrack.DTO.IncidenciaDTO;
+import com.TestTrackQA.testTrack.DTO.ComentarioIncidenciaDTO;
 import com.TestTrackQA.testTrack.model.EstadoIncidencia;
 import com.TestTrackQA.testTrack.model.Incidencia;
 import com.TestTrackQA.testTrack.service.IIncidenciaService;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
+import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -44,6 +46,49 @@ public class IncidenciaRestController {
             return ResponseEntity.ok(IncidenciaDTO.fromEntity(incidenciaService.buscarIncidencia(codIncidencia)));
         } catch (EntityNotFoundException ex) {
             return ResponseEntity.notFound().build();
+        }
+    }
+
+    @GetMapping("/{codIncidencia}/historial")
+    public ResponseEntity<?> traerHistorial(
+            @PathVariable Long codIncidencia, Authentication authentication) {
+        try {
+            return ResponseEntity.ok(incidenciaService.traerHistorial(codIncidencia, authentication.getName()));
+        } catch (EntityNotFoundException ex) {
+            return ResponseEntity.notFound().build();
+        } catch (AccessDeniedException ex) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ex.getMessage());
+        }
+    }
+
+    @GetMapping("/{codIncidencia}/comentarios")
+    public ResponseEntity<?> traerComentarios(
+            @PathVariable Long codIncidencia, Authentication authentication) {
+        try {
+            return ResponseEntity.ok(
+                    incidenciaService.traerComentarios(codIncidencia, authentication.getName()));
+        } catch (EntityNotFoundException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(java.util.Map.of("error", ex.getMessage()));
+        } catch (AccessDeniedException ex) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(java.util.Map.of("error", ex.getMessage()));
+        }
+    }
+
+    @PostMapping("/{codIncidencia}/comentarios")
+    public ResponseEntity<?> agregarComentario(
+            @PathVariable Long codIncidencia,
+            @RequestBody ComentarioRequest solicitud,
+            Authentication authentication) {
+        try {
+            ComentarioIncidenciaDTO comentario = incidenciaService.agregarComentario(
+                    codIncidencia, solicitud == null ? null : solicitud.contenido(), authentication.getName());
+            return ResponseEntity.status(HttpStatus.CREATED).body(comentario);
+        } catch (EntityNotFoundException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(java.util.Map.of("error", ex.getMessage()));
+        } catch (AccessDeniedException ex) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(java.util.Map.of("error", ex.getMessage()));
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.badRequest().body(java.util.Map.of("error", ex.getMessage()));
         }
     }
 
@@ -98,31 +143,34 @@ public class IncidenciaRestController {
         }
     }
 
-    @PostMapping("/{codIncidencia}/tomar")
-    public ResponseEntity<?> tomarIncidencia(@PathVariable Long codIncidencia, Authentication authentication) {
+    @PostMapping("/{codIncidencia}/asignar")
+    public ResponseEntity<?> asignarIncidencia(
+            @PathVariable Long codIncidencia,
+            @RequestParam(required = false) Long usuarioId,
+            Authentication authentication,
+            HttpSession session) {
+        Object proyectoActivo = session.getAttribute("proyectoActivoId");
+        if (!(proyectoActivo instanceof Long proyectoId)) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(java.util.Map.of("error", "No hay un proyecto activo"));
+        }
         try {
-            return ResponseEntity.ok(IncidenciaDTO.fromEntity(
-                    incidenciaService.tomarIncidencia(codIncidencia, authentication.getName())));
+            Incidencia actualizada = incidenciaService.actualizarAsignacionEnProyecto(
+                    codIncidencia, proyectoId, usuarioId, authentication.getName());
+            return ResponseEntity.ok(new AsignacionResponse(
+                    actualizada.getIdIncidencia(),
+                    actualizada.getDesarrolladorAsignado() == null
+                            ? null : actualizada.getDesarrolladorAsignado().getIdUsuario(),
+                    actualizada.getEstado().name()));
         } catch (EntityNotFoundException ex) {
-            return ResponseEntity.notFound().build();
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(java.util.Map.of("error", ex.getMessage()));
         } catch (AccessDeniedException ex) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ex.getMessage());
-        } catch (IllegalStateException ex) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(ex.getMessage());
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(java.util.Map.of("error", ex.getMessage()));
+        } catch (IllegalArgumentException | IllegalStateException ex) {
+            return ResponseEntity.badRequest().body(java.util.Map.of("error", ex.getMessage()));
         }
     }
 
-    @PostMapping("/{codIncidencia}/liberar")
-    public ResponseEntity<?> liberarIncidencia(@PathVariable Long codIncidencia, Authentication authentication) {
-        try {
-            return ResponseEntity.ok(IncidenciaDTO.fromEntity(
-                    incidenciaService.liberarIncidencia(codIncidencia, authentication.getName())));
-        } catch (EntityNotFoundException ex) {
-            return ResponseEntity.notFound().build();
-        } catch (AccessDeniedException ex) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ex.getMessage());
-        } catch (IllegalStateException ex) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(ex.getMessage());
-        }
-    }
+    private record AsignacionResponse(Long incidenciaId, Long usuarioId, String estado) { }
+    private record ComentarioRequest(String contenido) { }
 }
